@@ -1,0 +1,15 @@
+#!/bin/sh
+# postinst script for wasta-remastersys
+#
+# see: dh_installdeb(1)
+
+set -e
+
+if [ -f /etc/wasta-remastersys.conf.old ]
+then
+    mv /etc/wasta-remastersys.conf.old /etc/wasta-remastersys.conf
+fi
+
+exit 0
+
+

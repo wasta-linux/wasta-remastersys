@@ -1,0 +1,7 @@
+wasta-remastersys (4.4.0) wily; urgency=medium
+
+  * intial release: fork of PinguyBuilder, which is a fork of remastersys
+  * original PinguyBuilder deb found here:
+    http://sourceforge.net/projects/pinguy-os/files/ISO_Builder/
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Wed, 11 Nov 2015 09:12:40 +0300

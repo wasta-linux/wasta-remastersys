@@ -1,0 +1,13 @@
+Source: wasta-remastersys
+Section: utils
+Priority: optional
+Maintainer: Rik Shaw <rikshaw76@gmail.com>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.5
+Homepage: https://github.com/wasta-linux/wasta-remastersys
+
+Package: wasta-remastersys
+Architecture: all
+Depends: memtest86+, coreutils, dialog, mkisofs | genisoimage, findutils, bash, passwd, sed, squashfs-tools, casper, rsync, mount, eject, libdebian-installer4, os-prober, ubiquity-frontend-debconf, user-setup, discover1 | discover, laptop-detect, syslinux, syslinux-common, util-linux, xresprobe, aufs-tools | unionfs-fuse, dpkg-dev, gksu
+Description: Create a livecd of the installed system
+ You can either make a distributable livecd or a backup of your system.
