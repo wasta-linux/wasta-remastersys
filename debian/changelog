@@ -1,9 +1,9 @@
-wasta-remastersys (4.4.1) precise; urgency=low
+wasta-remastersys (4.4.1.1) precise; urgency=low
 
   * allow for easier rebranding
   * re-instated ability to work with Ubuntu 12.04 / 14.04 variants
   * only remove boot-repair if remastersys installs it
-  * (re)enable lightdm checks
+  * enable lightdm checks
   * avoid uid 999 conflict with virtualbox
 
  -- Justin Luth <jluth@mail.com>  Sat, 14 Nov 2015 13:32:00 +0300
