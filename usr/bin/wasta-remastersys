@@ -38,7 +38,8 @@ do_start() {
 
             # wasta-remastersys additions
             # NeoRouter: clear any config
-            rm -f /usr/local/ZebraNetworkSystems/NeoRouter/Client.xml &> /dev/null
+            rm -f /usr/local/ZebraNetworkSystems/NeoRouter/Client.xml &> /dev/null   
+            #boot-repair: only removed if added by remastersys. 
             apt-get remove -y -q boot-repair &> /dev/null
             dpkg-reconfigure openssh-server &> /dev/null
             dpkg-reconfigure at &> /dev/null
@@ -230,6 +231,10 @@ cdfs (){
     if [ -x /usr/bin/boot-repair ];
     then
         REMOVE_BOOT_REPAIR=""
+        #do not remove on firstboot if already installed
+        sed -i \
+            -e '\|apt-get .*remove.* boot-repair|d' \
+          /etc/init.d/wasta-remastersys-firstboot
     else
         log_msg "Adding Boot-Repair to LiveCD"
         REMOVE_BOOT_REPAIR=YES
