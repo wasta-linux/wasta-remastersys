@@ -247,6 +247,24 @@ cdfs (){
     log_msg "Making sure syslinux-themes is not installed"
     apt-get -y -q purge syslinux-themes* &> /dev/null
 
+    # check whether system is gnome or kde based to load the correct frontend
+
+    if [ "$(ps axf | grep startkde | grep -v grep)" != "" -o "$(ps axf | grep kwin | grep -v grep)" != "" ]; then
+        log_msg "Installing the Ubiquity KDE frontend"
+        apt-get -y -q install ubiquity-frontend-kde &> /dev/null
+        apt-get -y -q remove ubiquity-frontend-gtk &> /dev/null
+    else
+        log_msg "Installing the Ubiquity GTK frontend"
+        apt-get -y -q install --quiet ubiquity-frontend-gtk &> /dev/null
+        apt-get -y -q remove ubiquity-frontend-kde &> /dev/null
+        until [ -e /usr/lib/ubiquity/ubiquity/frontend/gtk_ui.py ]; do
+            log_msg "reattempting to install ubiquity-frontend-gtk..."
+            sleep 2
+            apt-get update  &> /dev/null
+            apt-get -y -q install ubiquity-frontend-gtk &> /dev/null
+        done
+    fi
+
     #Installing isolinux if needed
     log_msg "Making sure isolinux is installed"
     apt-get -y -q install isolinux syslinux-utils &> /dev/null
@@ -265,33 +283,14 @@ cdfs (){
         apt-get -y -q install boot-repair &> /dev/null
     fi
 
-    # check whether system is gnome or kde based to load the correct frontend
-
-    if [ "$(ps axf | grep startkde | grep -v grep)" != "" -o "$(ps axf | grep kwin | grep -v grep)" != "" ]; then
-        log_msg "Installing the Ubiquity KDE frontend"
-        apt-get -y -q install ubiquity-frontend-kde &> /dev/null
-        apt-get -y -q remove ubiquity-frontend-gtk &> /dev/null
-    else
-        log_msg "Installing the Ubiquity GTK frontend"
-        apt-get -y -q install --quiet ubiquity-frontend-gtk &> /dev/null
-        apt-get -y -q remove ubiquity-frontend-kde &> /dev/null
-        until [ -e /usr/lib/ubiquity/ubiquity/frontend/gtk_ui.py ]; do
-            echo && echo
-            echo "PRE-installing ubiquity-frontend-gtk..."
-            echo && echo
-            sleep 2
-            apt-get update
-            apt-get -y -q install ubiquity-frontend-gtk
-        done
-    fi
 
     # Check using lightdm and if it is setup properly for a live default session
     if [ "$(grep lightdm /etc/X11/default-display-manager)" != "" ]; then
         if [ ! -f /etc/lightdm/lightdm.conf ]; then
             [ ! -f /usr/share/xsessions/ubuntu.desktop ] && log_msg "Lightdm not setup properly. You must set your default desktop with lightdm prior to remastering" && exit 1
         else
-            AUTOLOGIN=$(grep -s '^autologin-user=' /etc/lightdm/lightdm.conf | awk -F= '{print $1}')
-            if [ "${AUTOLOGIN}" != "${LIVEUSER}" ] ; then
+            AUTOLOGIN=$(grep -s '^autologin-user=' /etc/lightdm/lightdm.conf | awk -F= '{print $2}')
+            if [ "${AUTOLOGIN}" ] && [ "${AUTOLOGIN}" != "${LIVEUSER}" ]; then
               echo && echo 
               log_msg "WARNING: LIVEUSER already defined in /etc/lightdm/lightdm.conf."
               log_msg "         No autologin until ${LIVEUSER} = ${AUTOLOGIN}"
@@ -505,15 +504,15 @@ FOO
     #virtualbox creates a user with id 999 which conflicts with casper's default
     #  causing login to fail
     if [ "$(getent passwd 999)" = "" ]; then
-        echo "   good: userID 999 is unused - no need to adjust anything"
+        log_msg "   good: userID 999 is unused - no need to adjust anything"
     elif [ "$(getent passwd 990)" = "" ]; then
-        echo "   good: userID 990 is unused - adjusting LIVECD user to use that"
+        log_msg "   good: userID 990 is unused - adjusting LIVECD user to use that"
         sed -i -e 's@user-uid 999@user-uid 990@' \
             /usr/share/initramfs-tools/scripts/casper-bottom/*adduser
     else
         echo && echo
-        echo "*  ERROR: problem finding a free userid. "
-        echo "*     Conflict with $(getent passwd 999 | awk -F: '{ print $1}')"
+        log_msg "*  ERROR: problem finding a free userid. "
+        log_msg "*     Conflict with $(getent passwd 999 | awk -F: '{ print $1}')"
         echo && echo
     fi
 
