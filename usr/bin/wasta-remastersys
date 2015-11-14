@@ -260,7 +260,7 @@ cdfs (){
     fi
 
     # Check if they are using lightdm and if it is setup properly for the live default session
-    # [ "$(grep lightdm /etc/X11/default-display-manager)" != "" ] && [ ! -f /etc/lightdm/lightdm.conf ] && [ ! -f /usr/share/xsessions/ubuntu.desktop ] && log_msg "Lightdm not setup properly. You must set your default desktop with lightdm prior to remastering" && exit 1
+    [ "$(grep lightdm /etc/X11/default-display-manager)" != "" ] && [ ! -f /etc/lightdm/lightdm.conf ] && [ ! -f /usr/share/xsessions/ubuntu.desktop ] && log_msg "Lightdm not setup properly. You must set your default desktop with lightdm prior to remastering" && exit 1
 
     # prevent the installer from changing the apt sources.list
     if [ ! -f "/usr/share/ubiquity/apt-setup.save" ]; then
