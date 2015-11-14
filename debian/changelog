@@ -1,3 +1,13 @@
+wasta-remastersys (4.4.1) precise; urgency=low
+
+  * allow for easier rebranding
+  * re-instated ability to work with Ubuntu 12.04 / 14.04 variants
+  * only remove boot-repair if remastersys installs it
+  * (re)enable lightdm checks
+  * avoid uid 999 conflict with virtualbox
+
+ -- Justin Luth <jluth@mail.com>  Sat, 14 Nov 2015 13:32:00 +0300
+
 wasta-remastersys (4.4.0) wily; urgency=medium
 
   * intial release: fork of PinguyBuilder, which is a fork of remastersys
