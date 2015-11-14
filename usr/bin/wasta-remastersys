@@ -658,9 +658,13 @@ FOO
             # copy the install icon to the sudo users desktop
             log_msg "Copying the install icon to the desktop of $LIVEUSER"
             UBIQUITYDESKTOP=$(find /usr -name ubiquity*.desktop)
-            install -d -o $LIVEUSER -g $LIVEUSER /$LIVEHOME/Desktop &> /dev/null
-            install -D -o $LIVEUSER -g $LIVEUSER $UBIQUITYDESKTOP /$LIVEHOME/Desktop/ &> /dev/null
-            sed -i "s/RELEASE/$LIVECDLABEL/" "/$LIVEHOME/Desktop/$(basename $UBIQUITYDESKTOP)" &> /dev/null
+            if [ "$UBIQUITYDESKTOP" ] ; then
+                install -d -o $LIVEUSER -g $LIVEUSER /$LIVEHOME/Desktop &> /dev/null
+                install -D -o $LIVEUSER -g $LIVEUSER $UBIQUITYDESKTOP /$LIVEHOME/Desktop/ &> /dev/null
+                sed -i \
+                    -e "s/RELEASE/$LIVECDLABEL/" \
+                  "/$LIVEHOME/Desktop/$(basename $UBIQUITYDESKTOP)" &> /dev/null
+            fi
         fi
     fi
     log_msg "Creating the casper.conf file."
