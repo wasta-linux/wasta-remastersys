@@ -1,6 +1,28 @@
 #!/bin/bash
 
-. /etc/wasta-remastersys/wasta-remastersys.version
+# remastersys script to make an installable livecd/dvd from an
+#   (XK)Ubuntu installed and customized system
+#
+#
+#  Originally created by Tony "Fragadelic" Brijeski
+#  Copyright 2007-2012 Tony "Fragadelic" Brijeski <tb6517@yahoo.com>
+#
+#  Most recently forked from PinguyBuilder which contained EFI bootcode.
+#  Includes most code changes found in the forks Respin and Bodhibuilder
+#
+#
+#  This version was tested on variants of Ubuntu's Precise 12.04 and up
+#     confirmed on Cinnamon Mint Maya 13, Precise 12.04(pending reverification)
+#     confirmed on Cinnamon Mint 17.x,    Trusty  14.04(pending reverification)
+#     confirmed on                        Wily    15.10(pending reverification)
+
+BRANDING=wasta-remastersys
+BRAND_NAME=${BRANDING}
+BRAND_BIN=${BRANDING}
+BRAND_ETC=${BRANDING}
+BRAND_INIT=${BRANDING}
+BRAND_LOG=${BRANDING}.log
+. /etc/${BRAND_ETC}/${BRAND_NAME}.version
 
 # checking to make sure script is running with root privileges
 if [ "$(whoami)" != "root" ]; then
@@ -8,19 +30,19 @@ if [ "$(whoami)" != "root" ]; then
     exit 1
 fi
 
-#create wasta-remastersys-firstboot script if it doesn't exist and populate with at least removal of the ubiquity*.desktop file from users Desktop and fix for recovery mode
-fbtest=$(grep "REM302" /etc/init.d/wasta-remastersys-firstboot)
+#create ${BRAND_INIT}-firstboot script if it doesn't exist and populate with at least removal of the ubiquity*.desktop file from users Desktop and fix for recovery mode
+fbtest=$(grep "#REM441" /etc/init.d/${BRAND_INIT}-firstboot)
 
 if [ "$fbtest" = "" ]; then
-    cat > /etc/init.d/wasta-remastersys-firstboot <<FOO
+    cat > /etc/init.d/${BRAND_INIT}-firstboot <<FOO
 #! /bin/sh
 ### BEGIN INIT INFO
-# Provides:          wasta-remastersys-firstboot
+# Provides:          ${BRAND_INIT}-firstboot
 # Required-Start:    \$remote_fs \$syslog \$all
 # Required-Stop:
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Run firstboot items for wasta-remastersys after a remastered system has been installed
+# Short-Description: Run firstboot cleanup and fixup items for ${BRAND_NAME} after a remastered system has been installed
 ### END INIT INFO
 
 PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:/usr/local/sbin
@@ -29,29 +51,29 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:/usr/local/sbin
 . /lib/lsb/init-functions
 
 do_start() {
-        #REM302
-        if [ "\`cat /proc/cmdline | grep casper\`" = "" ]; then
-            [ "\$VERBOSE" != no ] && log_begin_msg "Running wasta-remastersys-firstboot"
-            (sleep 60 && update-rc.d -f wasta-remastersys-firstboot remove) &
-            sed -i -e 's/root:x:/root:!:/g' /etc/shadow
-            rm -rf /home/*/Desktop/ubiquity*.desktop
+    #REM441
+    if [ "\`cat /proc/cmdline | grep casper\`" = "" ]; then
+        [ "\$VERBOSE" != no ] && log_begin_msg "Running ${BRAND_INIT}-firstboot"
+        (sleep 60 && update-rc.d -f ${BRAND_INIT}-firstboot remove) &
+        sed -i -e 's/root:x:/root:!:/g' /etc/shadow
+        rm -rf /home/*/Desktop/ubiquity*.desktop
 
-            # wasta-remastersys additions
-            # NeoRouter: clear any config
-            rm -f /usr/local/ZebraNetworkSystems/NeoRouter/Client.xml &> /dev/null   
-            #boot-repair: only removed if added by remastersys. 
-            apt-get remove -y -q boot-repair &> /dev/null
-            dpkg-reconfigure openssh-server &> /dev/null
-            dpkg-reconfigure at &> /dev/null
+        # ${BRAND_NAME} additions
+        # NeoRouter: clear any config
+        rm -f /usr/local/ZebraNetworkSystems/NeoRouter/Client.xml &> /dev/null
+        #boot-repair: only removed if added by ${BRAND_BIN}.
+        apt-get remove -y -q boot-repair &> /dev/null
+        dpkg-reconfigure openssh-server &> /dev/null
+        dpkg-reconfigure at &> /dev/null
 
-            #Place your custom commands below this line
+        #Place your custom commands below this line
 
-            #Place your custom commands above this line
+        #Place your custom commands above this line
 
-            ES=\$?
-            [ "\$VERBOSE" != no ] && log_end_msg \$ES
-            return \$ES
-        fi
+        ES=\$?
+        [ "\$VERBOSE" != no ] && log_end_msg \$ES
+        return \$ES
+    fi
 }
 
 case "\$1" in
@@ -74,10 +96,10 @@ FOO
 
 fi
 
-# load the wasta-remastersys.conf file
-. /etc/wasta-remastersys.conf
+# load the ${BRAND_NAME}.conf file
+. /etc/${BRAND_ETC}/${BRAND_NAME}.conf
 
-# if the wasta-remastersys.conf file is incorrect or missing, make sure to set defaults
+# if ${BRAND_NAME}.conf file is incorrect or missing, make sure to set defaults
 
 if [ "$LIVEUSER" = "" ]; then
     #Somebody must have removed the username from the configuration file
@@ -90,28 +112,25 @@ fi
 LIVEUSER=${LIVEUSER,,}
 
 
-if [ "$WORKDIR" = "" ]; then
-    BASEWORKDIR="/home/wasta-remastersys"
-    WORKDIR="/home/wasta-remastersys/wasta-remastersys"
-else
-    BASEWORKDIR="$WORKDIR"
-    WORKDIR="$WORKDIR/wasta-remastersys"
+if [ "$BASEWORKDIR" = "" ]; then
+    BASEWORKDIR="/home/${BRAND_NAME}"
 fi
+WORKDIR="$BASEWORKDIR/${BRAND_NAME}"
 
 if [ ! -d $WORKDIR ]; then
     mkdir -p $WORKDIR
 fi
 
-if [ -f $WORKDIR/wasta-remastersys.log ]; then
-    rm -f $WORKDIR/wasta-remastersys.log &> /dev/null
+if [ -f $WORKDIR/${BRAND_LOG} ]; then
+    rm -f $WORKDIR/${BRAND_LOG} &> /dev/null
 fi
 
-touch $WORKDIR/wasta-remastersys.log
+touch $WORKDIR/${BRAND_LOG}
 
 #added log_msg to reduce size. code provided by Ivailo (a.k.a. SmiL3y)
 log_msg() {
     echo "$1"
-    echo "$1" >>$WORKDIR/wasta-remastersys.log
+    echo "$1" >>$WORKDIR/${BRAND_LOG}
 }
 
 if [ "$LIVECDLABEL" = "" ]; then
@@ -141,7 +160,7 @@ case $2 in
     ;;
     "" )
         echo " "
-    ;;    
+    ;;
     * )
         CUSTOMISO="$2"
     ;;
@@ -173,32 +192,35 @@ case $1  in
         ;;
 
     *)
-        echo "Usage of wasta-remastersys $WASTA_REMASTERSYS_VERSION is as follows:"
+        echo "Usage of ${BRAND_BIN} ${BRAND_VERSION} is as follows:"
         echo " "
-        echo "   sudo wasta-remastersys backup|clean|dist [cdfs|iso] [filename.iso]"
+        echo "   sudo ${BRAND_BIN} backup|clean|dist [cdfs|iso] [filename.iso]"
         echo " "
         echo " "
         echo "Examples:"
         echo " "
-        echo "   sudo wasta-remastersys backup   (to make a livecd/dvd backup of your system)"
+        echo "   sudo ${BRAND_BIN} backup"
+        echo "        (to make a livecd/dvd backup of your system)"
         echo " "
-        echo "   sudo wasta-remastersys backup custom.iso"
-        echo "                             (to make a livecd/dvd backup and call the iso custom.iso)"
+        echo "   sudo ${BRAND_BIN} backup custom.iso"
+        echo "        (to make a livecd/dvd backup iso named custom.iso)"
         echo " "
-        echo "   sudo wasta-remastersys clean    (to clean up temporary files of wasta-remastersys)"
+        echo "   sudo ${BRAND_BIN} clean"
+        echo "        (to clean up temporary files of ${BRAND_NAME})"
         echo " "
-        echo "   sudo wasta-remastersys dist     (to make a distributable livecd/dvd of your system)"
+        echo "   sudo ${BRAND_BIN} dist"
+        echo "        (to make a distributable livecd/dvd of your system)"
         echo " "
-        echo "   sudo wasta-remastersys dist cdfs"
-        echo "                             (to make a distributable livecd/dvd filesystem only)"
+        echo "   sudo ${BRAND_BIN} dist cdfs"
+        echo "        (to make a distributable livecd/dvd filesystem only)"
         echo " "
-        echo "   sudo wasta-remastersys dist iso custom.iso"
-        echo "                             (to make a distributable iso named custom.iso but only"
-        echo "                              if the cdfs is already present)"
+        echo "   sudo ${BRAND_BIN} dist iso custom.iso"
+        echo "        (to make a distributable iso named custom.iso but only"
+        echo "         if the cdfs is already present)"
         echo " "
-        echo "   cdfs and iso options should only be used if you wish to modify something on the"
-        echo "   cd before the iso is created.  An example of this would be to modify the isolinux"
-        echo "   portion of the livecd/dvd"
+        echo "   cdfs and iso options should only be used if you wish to modify something"
+        echo "   on the cd before the iso is created.  An example of this would be to"
+        echo "   modify the isolinux portion of the livecd/dvd"
         echo " "
         exit 1
         ;;
@@ -207,15 +229,15 @@ esac
 
 cdfs (){
 
-    log_msg "Enabling wasta-remastersys-firstboot"
-    chmod 755 /etc/init.d/wasta-remastersys-firstboot
-    update-rc.d wasta-remastersys-firstboot defaults
+    log_msg "Enabling ${BRAND_INIT}-firstboot"
+    chmod 755 /etc/init.d/${BRAND_INIT}-firstboot
+    update-rc.d ${BRAND_INIT}-firstboot defaults
 
     log_msg "Checking filesystem type of the Working Folder"
     DIRTYPE=$(df -T -P $WORKDIR | grep "^\/dev" | awk '{print $2}')
     log_msg "$WORKDIR is on a $DIRTYPE filesystem"
 
-    #removing popularity-contest as it causes a problem when installing with ubiquity
+    #removing popularity-contest as it causes problems with ubiquity installer
     log_msg "Making sure popularity contest is not installed"
     apt-get -y -q remove popularity-contest &> /dev/null
 
@@ -234,14 +256,14 @@ cdfs (){
         #do not remove on firstboot if already installed
         sed -i \
             -e '\|apt-get .*remove.* boot-repair|d' \
-          /etc/init.d/wasta-remastersys-firstboot
+          /etc/init.d/${BRAND_INIT}-firstboot
     else
         log_msg "Adding Boot-Repair to LiveCD"
         REMOVE_BOOT_REPAIR=YES
         apt-get -y -q install boot-repair &> /dev/null
     fi
 
-    # check whether system is gnome or kde based to load the correct ubiquity frontend
+    # check whether system is gnome or kde based to load the correct frontend
 
     if [ "$(ps axf | grep startkde | grep -v grep)" != "" -o "$(ps axf | grep kwin | grep -v grep)" != "" ]; then
         log_msg "Installing the Ubiquity KDE frontend"
@@ -252,14 +274,16 @@ cdfs (){
         apt-get -y -q install --quiet ubiquity-frontend-gtk &> /dev/null
         apt-get -y -q remove ubiquity-frontend-kde &> /dev/null
         until [ -e /usr/lib/ubiquity/ubiquity/frontend/gtk_ui.py ]; do
-            echo && echo && echo "PRE-installing ubiquity-frontend-gtk..." && echo && echo
+            echo && echo
+            echo "PRE-installing ubiquity-frontend-gtk..."
+            echo && echo
             sleep 2
             apt-get update
             apt-get -y -q install ubiquity-frontend-gtk
         done
     fi
 
-    # Check if they are using lightdm and if it is setup properly for the live default session
+    # Check using lightdm and if it is setup properly for a live default session
     [ "$(grep lightdm /etc/X11/default-display-manager)" != "" ] && [ ! -f /etc/lightdm/lightdm.conf ] && [ ! -f /usr/share/xsessions/ubuntu.desktop ] && log_msg "Lightdm not setup properly. You must set your default desktop with lightdm prior to remastering" && exit 1
 
     # prevent the installer from changing the apt sources.list
@@ -268,7 +292,7 @@ cdfs (){
     fi
 
     cat > /usr/share/ubiquity/apt-setup <<FOO
-# wasta-remastersys custom apt-setup
+# ${BRAND_NAME} custom apt-setup
 # we don't run /usr/lib/ubiquity/apt-setup scripts
 # instead just use source system sources.list
 
@@ -376,14 +400,15 @@ FOO
         rm -rf $WORKDIR/dummysys/var/lib/AccountsService/users/*
         rm -rf $WORKDIR/dummysys/var/lib/kdm/*
         rm -rf $WORKDIR/dummysys/var/run/console/*
+
         rm -f $WORKDIR/dummysys/etc/gdm/gdm.conf-custom
         #Setting up auto timed login for GDM3
-        cp -a /etc/wasta-remastersys/gdm $WORKDIR/dummysys/etc/
+        cp -a /etc/${BRAND_ETC}/gdm $WORKDIR/dummysys/etc/
         sed -i "s/LIVEUSER/$LIVEUSER/g" $WORKDIR/dummysys/etc/gdm/custom.conf
         chmod +x $WORKDIR/dummysys/etc/gdm/custom.conf
         chmod 755 $WORKDIR/dummysys/etc/gdm/custom.conf
         #Setting up auto timed login for MDM
-        cp -a /etc/wasta-remastersys/mdm $WORKDIR/dummysys/etc/
+        cp -a /etc/${BRAND_ETC}/mdm $WORKDIR/dummysys/etc/
         sed -i "s/LIVEUSER/$LIVEUSER/g" $WORKDIR/dummysys/etc/mdm/mdm.conf
         chmod +x $WORKDIR/dummysys/etc/mdm/mdm.conf
         chmod 755 $WORKDIR/dummysys/etc/mdm/mdm.conf
@@ -404,7 +429,7 @@ FOO
         fi
 
         # rik: creating empty placeholder files this way has proved problematic.
-        #   The files are owned by root:root which isn't right. 
+        #   The files are owned by root:root which isn't right.
         #   They all seem to autocreate just fine, so unsure why the original
         #   author thought it necessary to create these placeholder files.
         # for i in dpkg.log lastlog mail.log syslog auth.log daemon.log faillog lpr.log mail.warn user.log boot debug mail.err messages wtmp bootstrap.log dmesg kern.log mail.info
@@ -472,16 +497,16 @@ FOO
         sed -i -e 's@user-uid 999@user-uid 990@' \
             /usr/share/initramfs-tools/scripts/casper-bottom/*adduser
     else
-        echo && echo 
+        echo && echo
         echo "*  ERROR: problem finding a free userid. "
         echo "*     Conflict with $(getent passwd 999 | awk -F: '{ print $1}')"
-        echo && echo 
+        echo && echo
     fi
 
     # copy over some of the necessary stuff for the livecd
 
     #copy any preseed files
-    cp /etc/wasta-remastersys/preseed/* $WORKDIR/ISOTMP/preseed/
+    cp /etc/${BRAND_ETC}/preseed/* $WORKDIR/ISOTMP/preseed/
 
     #BOOT Type is isolinux
     log_msg "Copying memtest86+ for the live system"
@@ -489,8 +514,8 @@ FOO
 
     #EFI BOOT
     log_msg "Copying EFI Boot for the live system"
-    cp -a /usr/lib/wasta-remastersys/boot $WORKDIR/ISOTMP/
-    cp -a /usr/lib/wasta-remastersys/EFI $WORKDIR/ISOTMP/
+    cp -a /usr/lib/${BRAND_NAME}/boot $WORKDIR/ISOTMP/
+    cp -a /usr/lib/${BRAND_NAME}/EFI $WORKDIR/ISOTMP/
     #cp $WORKDIR/ISOTMP/EFI/BOOT/BOOTx64.EFI $WORKDIR/ISOTMP/EFI/BOOT/fallback.efi
     sed -i "s/__LIVECDLABEL__/$LIVECDLABEL/g" $WORKDIR/ISOTMP/boot/grub/grub.cfg
     sed -i "s/__LIVECDLABEL__/$LIVECDLABEL/g" $WORKDIR/ISOTMP/boot/grub/loopback.cfg
@@ -523,14 +548,14 @@ FOO
     # check and see if they have a custom isolinux already setup. eg. they copied over
     # the isolinux folder from their original livecd or made a custom one for their distro
 
-    if [ ! -f /etc/wasta-remastersys/customisolinux/isolinux.cfg ]; then
+    if [ ! -f /etc/${BRAND_ETC}/customisolinux/isolinux.cfg ]; then
         log_msg "Creating isolinux setup for the live system"
         find /usr -name 'isolinux.bin' -exec cp {} $WORKDIR/ISOTMP/isolinux/ \;
         VESAMENU=$(find /usr -print0 | grep -EzZ --max-count=1 "bios/vesamenu.c32|syslinux/vesamenu.c32")
         if [ -z "$VESAMENU" ]; then
             log_msg "   unable to find vesamenu.c32 - skipping"
         else
-            cp $VESAMENU $WORKDIR/ISOTMP/isolinux/ 
+            cp $VESAMENU $WORKDIR/ISOTMP/isolinux/
         fi
         LDLINUX=$(find /usr -print0 | grep -EzZ --max-count=1 "bios/ldlinux.c32|syslinux/ldlinux.c32")
         if [ -z "$LDLINUX" ]; then
@@ -558,12 +583,12 @@ FOO
         fi
         # setup isolinux for the livecd
         VERSION=$(lsb_release -r | awk '{print $2}' | awk -F "." '{print $1}')
-        sed -e 's/__LIVECDLABEL__/'"$LIVECDLABEL"'/g' /etc/wasta-remastersys/isolinux/isolinux.cfg.vesamenu > \
+        sed -e 's/__LIVECDLABEL__/'"$LIVECDLABEL"'/g' /etc/${BRAND_ETC}/isolinux/isolinux.cfg.vesamenu > \
         $WORKDIR/ISOTMP/isolinux/isolinux.cfg
         cp $SPLASHPNG $WORKDIR/ISOTMP/isolinux/splash.png
     else
         log_msg "Copying your custom isolinux setup to the live system"
-        cp /etc/wasta-remastersys/customisolinux/* $WORKDIR/ISOTMP/isolinux/ &> /dev/null
+        cp /etc/${BRAND_ETC}/customisolinux/* $WORKDIR/ISOTMP/isolinux/ &> /dev/null
     fi
 
     log_msg "Checking the ARCH of the system and setting the README.diskdefines file"
@@ -726,55 +751,55 @@ FOO
         done
     fi
 
-    mksquashfs $INCLUDES $REALFOLDERS $WORKDIR/ISOTMP/casper/filesystem.squashfs -no-duplicates $SQUASHFSOPTS -e root/.local/Trash root/.thumbnails root/.cache root/.bash_history root/.lesshst root/.nano_history /boot/efi/EFI /boot/grub $BASEWORKDIR $EXCLUDES 2>>$WORKDIR/wasta-remastersys.log
+    mksquashfs $INCLUDES $REALFOLDERS $WORKDIR/ISOTMP/casper/filesystem.squashfs -no-duplicates $SQUASHFSOPTS -e root/.local/Trash root/.thumbnails root/.cache root/.bash_history root/.lesshst root/.nano_history /boot/efi/EFI /boot/grub $BASEWORKDIR $EXCLUDES 2>>$WORKDIR/${BRAND_LOG}
 
 
     sleep 1
 
     #add some stuff the log in case of problems so I can troubleshoot it easier
-    echo "Updating the wasta-remastersys.log"
-    echo "------------------------------------------------------" >>$WORKDIR/wasta-remastersys.log
-    echo "Mount information" >>$WORKDIR/wasta-remastersys.log
-    mount >>$WORKDIR/wasta-remastersys.log
-    echo "------------------------------------------------------" >>$WORKDIR/wasta-remastersys.log
-    echo "Disk size information" >>$WORKDIR/wasta-remastersys.log
-    df -h >>$WORKDIR/wasta-remastersys.log
-    echo "------------------------------------------------------" >>$WORKDIR/wasta-remastersys.log
-    echo "Casper Script info" >>$WORKDIR/wasta-remastersys.log
-    ls -l /usr/share/initramfs-tools/scripts/casper-bottom/ >>$WORKDIR/wasta-remastersys.log
-    echo "------------------------------------------------------" >>$WORKDIR/wasta-remastersys.log
-    echo "/etc/wasta-remastersys.conf info" >>$WORKDIR/wasta-remastersys.log
-    cat /etc/wasta-remastersys.conf >>$WORKDIR/wasta-remastersys.log
-    echo "------------------------------------------------------" >>$WORKDIR/wasta-remastersys.log
-    echo "/etc/casper.conf info" >>$WORKDIR/wasta-remastersys.log
-    cat /etc/casper.conf >>$WORKDIR/wasta-remastersys.log
-    echo "------------------------------------------------------" >>$WORKDIR/wasta-remastersys.log
-    echo "/etc/passwd info" >>$WORKDIR/wasta-remastersys.log
-    cat $WORKDIR/dummysys/etc/passwd >>$WORKDIR/wasta-remastersys.log
-    echo "------------------------------------------------------" >>$WORKDIR/wasta-remastersys.log
-    echo "/etc/group info" >>$WORKDIR/wasta-remastersys.log
-    cat $WORKDIR/dummysys/etc/group >>$WORKDIR/wasta-remastersys.log
-    echo "------------------------------------------------------" >>$WORKDIR/wasta-remastersys.log
-    echo "/etc/X11/default-display-manager info" >>$WORKDIR/wasta-remastersys.log
-    cat $WORKDIR/dummysys/etc/X11/default-display-manager >>$WORKDIR/wasta-remastersys.log
-    echo "------------------------------------------------------" >>$WORKDIR/wasta-remastersys.log
-    echo "/etc/skel info" >>$WORKDIR/wasta-remastersys.log
-    find /etc/skel >>$WORKDIR/wasta-remastersys.log
-    echo "------------------------------------------------------" >>$WORKDIR/wasta-remastersys.log
-    echo "lsb-release info" >>$WORKDIR/wasta-remastersys.log
-    cat $WORKDIR/dummysys/etc/lsb-release >>$WORKDIR/wasta-remastersys.log
-    echo "------------------------------------------------------" >>$WORKDIR/wasta-remastersys.log
-    echo "wasta-remastersys version info" >>$WORKDIR/wasta-remastersys.log
-    cat $WORKDIR/dummysys/etc/wasta-remastersys/wasta-remastersys.version >>$WORKDIR/wasta-remastersys.log
-    echo "------------------------------------------------------" >>$WORKDIR/wasta-remastersys.log
-    echo "ISOTMP info" >>$WORKDIR/wasta-remastersys.log
-    ls -Rl $WORKDIR/ISOTMP >>$WORKDIR/wasta-remastersys.log
-    echo "------------------------------------------------------" >>$WORKDIR/wasta-remastersys.log
-    echo "$WORKDIR/tmpusers info" >>$WORKDIR/wasta-remastersys.log
-    cat $WORKDIR/tmpusers >>$WORKDIR/wasta-remastersys.log
-    echo "------------------------------------------------------" >>$WORKDIR/wasta-remastersys.log
-    echo "Command-line options = $@" >>$WORKDIR/wasta-remastersys.log
-    echo "------------------------------------------------------" >>$WORKDIR/wasta-remastersys.log
+    msg_log "Updating the ${BRAND_LOG}"
+    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
+    echo "Mount information" >>$WORKDIR/${BRAND_LOG}
+    mount >>$WORKDIR/${BRAND_LOG}
+    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
+    echo "Disk size information" >>$WORKDIR/${BRAND_LOG}
+    df -h >>$WORKDIR/${BRAND_LOG}
+    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
+    echo "Casper Script info" >>$WORKDIR/${BRAND_LOG}
+    ls -l /usr/share/initramfs-tools/scripts/casper-bottom/ >>$WORKDIR/${BRAND_LOG}
+    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
+    echo "/etc/${BRAND_ETC}/${BRAND_NAME}.conf info" >>$WORKDIR/${BRAND_LOG}
+    cat /etc/${BRAND_ETC}/${BRAND_NAME}.conf >>$WORKDIR/${BRAND_LOG}
+    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
+    echo "/etc/casper.conf info" >>$WORKDIR/${BRAND_LOG}
+    cat /etc/casper.conf >>$WORKDIR/${BRAND_LOG}
+    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
+    echo "/etc/passwd info" >>$WORKDIR/${BRAND_LOG}
+    cat $WORKDIR/dummysys/etc/passwd >>$WORKDIR/${BRAND_LOG}
+    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
+    echo "/etc/group info" >>$WORKDIR/${BRAND_LOG}
+    cat $WORKDIR/dummysys/etc/group >>$WORKDIR/${BRAND_LOG}
+    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
+    echo "/etc/X11/default-display-manager info" >>$WORKDIR/${BRAND_LOG}
+    cat $WORKDIR/dummysys/etc/X11/default-display-manager >>$WORKDIR/${BRAND_LOG}
+    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
+    echo "/etc/skel info" >>$WORKDIR/${BRAND_LOG}
+    find /etc/skel >>$WORKDIR/${BRAND_LOG}
+    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
+    echo "lsb-release info" >>$WORKDIR/${BRAND_LOG}
+    cat $WORKDIR/dummysys/etc/lsb-release >>$WORKDIR/${BRAND_LOG}
+    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
+    echo "${BRAND_NAME} version info" >>$WORKDIR/${BRAND_LOG}
+    cat $WORKDIR/dummysys/etc/${BRAND_ETC}/${BRAND_NAME}.version >>$WORKDIR/${BRAND_LOG}
+    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
+    echo "ISOTMP info" >>$WORKDIR/${BRAND_LOG}
+    ls -Rl $WORKDIR/ISOTMP >>$WORKDIR/${BRAND_LOG}
+    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
+    echo "$WORKDIR/tmpusers info" >>$WORKDIR/${BRAND_LOG}
+    cat $WORKDIR/tmpusers >>$WORKDIR/${BRAND_LOG}
+    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
+    echo "Command-line options = $@" >>$WORKDIR/${BRAND_LOG}
+    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
 
     # cleanup the install icons as they aren't needed on the current system
     if [ "$1" = "backup" ]; then
@@ -811,9 +836,9 @@ FOO
     for i in $(cat /tmp/size.tmp); do a=$(($a+$i)); done
     echo $a > $WORKDIR/ISOTMP/casper/filesystem.size
 
-    log_msg "Removing wasta-remastersys-firstboot from system startup"
-    update-rc.d -f wasta-remastersys-firstboot remove
-    chmod 644 /etc/init.d/wasta-remastersys-firstboot
+    log_msg "Removing ${BRAND_INIT}-firstboot from system startup"
+    update-rc.d -f ${BRAND_INIT}-firstboot remove
+    chmod 644 /etc/init.d/${BRAND_INIT}-firstboot
 }
 
 iso (){
@@ -826,7 +851,7 @@ iso (){
     # check to see if the cd filesystem exists
 
     if [ ! -f "$WORKDIR/ISOTMP/casper/filesystem.squashfs" ]; then
-        log_msg "The filesystem.squashfs filesystem is missing.  Either there was a problem creating the compressed filesystem or you are trying to run sudo wasta-remastersys dist iso before sudo wasta-remastersys dist cdfs"
+        log_msg "The filesystem.squashfs filesystem is missing.  Either there was a problem creating the compressed filesystem or you are trying to run sudo ${BRAND_BIN} dist iso before sudo ${BRAND_BIN} dist cdfs"
         exit 1
     fi
 
@@ -864,7 +889,7 @@ iso (){
 
     # Step 8 - Make the ISO file
     log_msg "Creating $CUSTOMISO in $WORKDIR"
-    $CREATEISO -iso-level 3 -quiet -r -V "$LIVECDLABEL" -cache-inodes -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -o $WORKDIR/$CUSTOMISO "$WORKDIR/ISOTMP" 2>>$WORKDIR/wasta-remastersys.log 1>>$WORKDIR/wasta-remastersys.log
+    $CREATEISO -iso-level 3 -quiet -r -V "$LIVECDLABEL" -cache-inodes -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -o $WORKDIR/$CUSTOMISO "$WORKDIR/ISOTMP" 2>>$WORKDIR/${BRAND_LOG} 1>>$WORKDIR/${BRAND_LOG}
     if [ ! -f $WORKDIR/$CUSTOMISO ]; then
         log_msg "The iso was not created. There was a problem. Exiting"
         exit 1
@@ -874,8 +899,8 @@ iso (){
     log_msg "Making $CUSTOMISO a hybrid iso"
     isohybrid --uefi $WORKDIR/$CUSTOMISO
 
-    # create the md5 sum file so the user doesn't have to - this is good so the iso
-    # file can later be tested to ensure it hasn't become corrupted
+    # create the md5 sum file so the user doesn't have to - this is good so the
+    # iso file can later be tested to ensure it hasn't become corrupted
 
     log_msg "Creating $CUSTOMISO.md5 in $WORKDIR"
 
@@ -890,7 +915,8 @@ iso (){
 
 }
 
-# check to see if either iso or cdfs options have been invoked and proceed accordingly
+# check to see if either of the iso or cdfs options have been invoked
+# and proceed accordingly
 
 case $2 in
     iso )
