@@ -22,7 +22,7 @@ BRAND_BIN=${BRANDING}
 BRAND_ETC=${BRANDING}
 BRAND_INIT=${BRANDING}
 BRAND_LOG=${BRANDING}.log
-. /etc/${BRAND_ETC}/${BRAND_NAME}.version
+. /etc/"${BRAND_ETC}"/"${BRAND_NAME}.version"
 
 # checking to make sure script is running with root privileges
 if [ "$(whoami)" != "root" ]; then
@@ -31,10 +31,10 @@ if [ "$(whoami)" != "root" ]; then
 fi
 
 #create ${BRAND_INIT}-firstboot script if it doesn't exist and populate with at least removal of the ubiquity*.desktop file from users Desktop and fix for recovery mode
-fbtest=$(grep "#REM441" /etc/init.d/${BRAND_INIT}-firstboot)
+fbtest=$(grep "#REM441" /etc/init.d/"${BRAND_INIT}-firstboot")
 
 if [ "$fbtest" = "" ]; then
-    cat > /etc/init.d/${BRAND_INIT}-firstboot <<FOO
+    cat > /etc/init.d/"${BRAND_INIT}-firstboot" <<FOO
 #! /bin/sh
 ### BEGIN INIT INFO
 # Provides:          ${BRAND_INIT}-firstboot
@@ -99,7 +99,7 @@ FOO
 fi
 
 # load the ${BRAND_NAME}.conf file
-. /etc/${BRAND_ETC}/${BRAND_NAME}.conf
+. /etc/"${BRAND_ETC}"/"${BRAND_NAME}.conf"
 
 # if ${BRAND_NAME}.conf file is incorrect or missing, make sure to set defaults
 
@@ -115,24 +115,24 @@ LIVEUSER=${LIVEUSER,,}
 
 
 if [ "$BASEWORKDIR" = "" ]; then
-    BASEWORKDIR="/home/${BRAND_NAME}"
+    BASEWORKDIR=/home/"${BRAND_NAME}"
 fi
-WORKDIR="$BASEWORKDIR/${BRAND_NAME}"
+WORKDIR="${BASEWORKDIR}"/"${BRAND_NAME}"
 
-if [ ! -d $WORKDIR ]; then
+if [ ! -d "$WORKDIR" ]; then
     mkdir -p $WORKDIR
 fi
 
-if [ -f $WORKDIR/${BRAND_LOG} ]; then
-    rm -f $WORKDIR/${BRAND_LOG} &> /dev/null
+if [ -f "$WORKDIR"/"${BRAND_LOG}" ]; then
+    rm -f "$WORKDIR"/"${BRAND_LOG}" &> /dev/null
 fi
 
-touch $WORKDIR/${BRAND_LOG}
+touch "$WORKDIR"/"${BRAND_LOG}"
 
 #added log_msg to reduce size. code provided by Ivailo (a.k.a. SmiL3y)
 log_msg() {
     echo "$1"
-    echo "$1" >>$WORKDIR/${BRAND_LOG}
+    echo "$1" >>"$WORKDIR"/"${BRAND_LOG}"
 }
 
 if [ "$LIVECDLABEL" = "" ]; then
@@ -232,11 +232,11 @@ esac
 cdfs (){
 
     log_msg "Enabling ${BRAND_INIT}-firstboot"
-    chmod 755 /etc/init.d/${BRAND_INIT}-firstboot
-    update-rc.d ${BRAND_INIT}-firstboot defaults
+    chmod 755 /etc/init.d/"${BRAND_INIT}-firstboot"
+    update-rc.d "${BRAND_INIT}-firstboot" defaults
 
     log_msg "Checking filesystem type of the Working Folder"
-    DIRTYPE=$(df -T -P $WORKDIR | grep "^\/dev" | awk '{print $2}')
+    DIRTYPE=$(df -T -P "$WORKDIR" | grep "^\/dev" | awk '{print $2}')
     log_msg "$WORKDIR is on a $DIRTYPE filesystem"
 
     #removing popularity-contest as it causes problems with ubiquity installer
@@ -276,7 +276,7 @@ cdfs (){
         #do not remove on firstboot if already installed
         sed -i \
             -e '\|apt-get .*remove.* boot-repair|d' \
-          /etc/init.d/${BRAND_INIT}-firstboot
+          /etc/init.d/"${BRAND_INIT}-firstboot"
     else
         log_msg "Adding Boot-Repair to LiveCD"
         REMOVE_BOOT_REPAIR=YES
@@ -324,24 +324,24 @@ FOO
 
     # Step 3 - Create the CD tree in $WORKDIR/ISOTMP
     log_msg "Checking if the $WORKDIR folder has been created"
-    if [ -d "$WORKDIR/dummysys" ]; then
-        rm -rf $WORKDIR/dummysys/var/*
-        rm -rf $WORKDIR/dummysys/etc/*
-        rm -rf $WORKDIR/dummysys/run/*
-        rm -rf $WORKDIR/ISOTMP/{isolinux,grub,.disk}
+    if [ -d "$WORKDIR"/dummysys ]; then
+        rm -rf "$WORKDIR"/dummysys/var/*
+        rm -rf "$WORKDIR"/dummysys/etc/*
+        rm -rf "$WORKDIR"/dummysys/run/*
+        rm -rf "$WORKDIR"/ISOTMP/{isolinux,grub,.disk}
     else
         log_msg "Creating $WORKDIR folder tree"
-        mkdir -p $WORKDIR/ISOTMP/{casper,preseed}
-        mkdir -p $WORKDIR/dummysys/{dev,etc,proc,tmp,sys,mnt,media/cdrom,var}
-        rsync -a /dev/urandom $WORKDIR/dummysys/dev/
+        mkdir -p "$WORKDIR"/ISOTMP/{casper,preseed}
+        mkdir -p "$WORKDIR"/dummysys/{dev,etc,proc,tmp,sys,mnt,media/cdrom,var}
+        rsync -a /dev/urandom "$WORKDIR"/dummysys/dev/
         if [ -d /run ]; then
-            mkdir -p $WORKDIR/dummysys/run
+            mkdir -p "$WORKDIR"/dummysys/run
         fi
-        chmod ug+rwx,o+rwt $WORKDIR/dummysys/tmp
+        chmod ug+rwx,o+rwt "$WORKDIR"/dummysys/tmp
     fi
 
     log_msg "Creating $WORKDIR/ISOTMP folder tree"
-    mkdir -p $WORKDIR/ISOTMP/{isolinux,install,.disk}
+    mkdir -p "$WORKDIR"/ISOTMP/{isolinux,install,.disk}
 
     log_msg "Copying /var and /etc to temp area and excluding extra files  ... this will take a while so be patient"
 
@@ -351,93 +351,93 @@ FOO
         done
     fi
 
-    rsync --exclude='*.log.*' --exclude='*~' --exclude='*.pid' --exclude='*.bak' --exclude='*.[0-9].gz' --exclude='*.deb' --exclude='kdecache*' $VAREXCLUDES -a /var/. $WORKDIR/dummysys/var/.
-    rsync $VAREXCLUDES -a /etc/. $WORKDIR/dummysys/etc/.
+    rsync --exclude='*.log.*' --exclude='*~' --exclude='*.pid' --exclude='*.bak' --exclude='*.[0-9].gz' --exclude='*.deb' --exclude='kdecache*' $VAREXCLUDES -a /var/. "$WORKDIR"/dummysys/var/.
+    rsync $VAREXCLUDES -a /etc/. "$WORKDIR"/dummysys/etc/.
 
     #Adding packages location to sources
     ARCH=$(archdetect | awk -F "/" '{print $1}')
     DISKINFONAME=$(echo $LIVECDLABEL | awk '{print $1}')
     log_msg "Adding CD-ROM to source list"
     . /etc/lsb-release
-    sed -i '/cdrom:/d' $WORKDIR/dummysys/etc/apt/sources.list &> /dev/null
-    echo "deb cdrom:[$DISKINFONAME $DISTRIB_RELEASE - Release $ARCH]/ dists/" >> $WORKDIR/dummysys/etc/apt/sources.list
+    sed -i '/cdrom:/d' "$WORKDIR"/dummysys/etc/apt/sources.list &> /dev/null
+    echo "deb cdrom:[$DISKINFONAME $DISTRIB_RELEASE - Release $ARCH]/ dists/" >> "$WORKDIR"/dummysys/etc/apt/sources.list
 
     #Copying grub config
-    cp /etc/default/grub $WORKDIR/dummysys/etc/default/grub
+    cp /etc/default/grub "$WORKDIR"/dummysys/etc/default/grub
 
     # rik: default to no grub boot menu, I think ubiquity is smart enough
     #   to modify to show again if other OSs are detected
     sed -i -e "s@.*\(GRUB_HIDDEN_TIMEOUT\)=.*@\1=0@" \
-        $WORKDIR/dummysys/etc/default/grub
+        "$WORKDIR"/dummysys/etc/default/grub
 
     sed -i -e "s@.*\(GRUB_DISTRIBUTOR\)=.*@\1=\"$LIVECDLABEL\"@" \
-        $WORKDIR/dummysys/etc/default/grub
+        "$WORKDIR"/dummysys/etc/default/grub
 
     log_msg "Cleaning up files not needed for the live in $WORKDIR/dummysys"
-    rm -rf $WORKDIR/dummysys/etc/apt/sources.list.d/*.save &> /dev/null
-# rik rm -rf $WORKDIR/dummysys/etc/apt/apt.conf.d/* &> /dev/null
-# rik rm -rf $WORKDIR/dummysys/etc/apt/preferences.d/* &> /dev/null
-# rik rm -rf $WORKDIR/dummysys/var/lib/apt/lists/* -vf &> /dev/null
-    rm -rf $WORKDIR/dummysys/var/lib/apt/lists/lock &> /dev/null
-    rm -rf $WORKDIR/dummysys/var/cache/apt/archives/* &> /dev/null
-    rm -rf $WORKDIR/dummysys/var/lib/ureadahead/pack &> /dev/null
-    rm -f $WORKDIR/dummysys/var/lib/update-notifier/user.d/* &> /dev/null
-    rm -f $WORKDIR/dummysys/etc/X11/xorg.conf*
-    rm -f $WORKDIR/dummysys/etc/{hosts,hostname,mtab*,fstab}
-    if [ ! -L $WORKDIR/dummysys/etc/resolv.conf ]; then
-        rm -f $WORKDIR/dummysys/etc/resolv.conf
+    rm -rf "$WORKDIR"/dummysys/etc/apt/sources.list.d/*.save &> /dev/null
+# rik rm -rf "$WORKDIR"/dummysys/etc/apt/apt.conf.d/* &> /dev/null
+# rik rm -rf "$WORKDIR"/dummysys/etc/apt/preferences.d/* &> /dev/null
+# rik rm -rf "$WORKDIR"/dummysys/var/lib/apt/lists/* -vf &> /dev/null
+    rm -rf "$WORKDIR"/dummysys/var/lib/apt/lists/lock &> /dev/null
+    rm -rf "$WORKDIR"/dummysys/var/cache/apt/archives/* &> /dev/null
+    rm -rf "$WORKDIR"/dummysys/var/lib/ureadahead/pack &> /dev/null
+    rm -f "$WORKDIR"/dummysys/var/lib/update-notifier/user.d/* &> /dev/null
+    rm -f "$WORKDIR"/dummysys/etc/X11/xorg.conf*
+    rm -f "$WORKDIR"/dummysys/etc/{hosts,hostname,mtab*,fstab}
+    if [ ! -L "$WORKDIR"/dummysys/etc/resolv.conf ]; then
+        rm -f "$WORKDIR"/dummysys/etc/resolv.conf
     fi
-    rm -f $WORKDIR/dummysys/etc/udev/rules.d/70-persistent*
-    rm -f $WORKDIR/dummysys/etc/cups/ssl/{server.crt,server.key}
-    rm -f $WORKDIR/dummysys/etc/ssh/*key*
-    rm -f $WORKDIR/dummysys/var/lib/dbus/machine-id
-    rsync -a /dev/urandom $WORKDIR/dummysys/dev/
-    find $WORKDIR/dummysys/var/log/ -type f -exec rm -f {} \;
-    find $WORKDIR/dummysys/var/lock/ -type f -exec rm -f {} \;
-    find $WORKDIR/dummysys/var/backups/ -type f -exec rm -f {} \;
-    find $WORKDIR/dummysys/var/tmp/ -type f -exec rm -f {} \;
-    find $WORKDIR/dummysys/var/crash/ -type f -exec rm -f {} \;
-    find $WORKDIR/dummysys/var/lib/ubiquity/ -type f -exec rm -f {} \;
+    rm -f "$WORKDIR"/dummysys/etc/udev/rules.d/70-persistent*
+    rm -f "$WORKDIR"/dummysys/etc/cups/ssl/{server.crt,server.key}
+    rm -f "$WORKDIR"/dummysys/etc/ssh/*key*
+    rm -f "$WORKDIR"/dummysys/var/lib/dbus/machine-id
+    rsync -a /dev/urandom "$WORKDIR"/dummysys/dev/
+    find "$WORKDIR"/dummysys/var/log/ -type f -exec rm -f {} \;
+    find "$WORKDIR"/dummysys/var/lock/ -type f -exec rm -f {} \;
+    find "$WORKDIR"/dummysys/var/backups/ -type f -exec rm -f {} \;
+    find "$WORKDIR"/dummysys/var/tmp/ -type f -exec rm -f {} \;
+    find "$WORKDIR"/dummysys/var/crash/ -type f -exec rm -f {} \;
+    find "$WORKDIR"/dummysys/var/lib/ubiquity/ -type f -exec rm -f {} \;
 
     if [ "$1" = "dist" ]; then
 
-        rm -f $WORKDIR/dummysys/etc/{group,passwd,shadow,shadow-,gshadow,gshadow-}
-        rm -f $WORKDIR/dummysys/etc/wicd/{wired-settings.conf,wireless-settings.conf}
-        rm -rf $WORKDIR/dummysys/etc/NetworkManager/system-connections/*
-        rm -f $WORKDIR/dummysys/etc/printcap
-        rm -f $WORKDIR/dummysys/etc/cups/printers.conf
-        touch $WORKDIR/dummysys/etc/printcap
-        touch $WORKDIR/dummysys/etc/cups/printers.conf
-        rm -rf $WORKDIR/dummysys/var/cache/gdm/*
-        rm -rf $WORKDIR/dummysys/var/lib/sudo/*
-        rm -rf $WORKDIR/dummysys/var/lib/AccountsService/users/*
-        rm -rf $WORKDIR/dummysys/var/lib/kdm/*
-        rm -rf $WORKDIR/dummysys/var/run/console/*
+        rm -f "$WORKDIR"/dummysys/etc/{group,passwd,shadow,shadow-,gshadow,gshadow-}
+        rm -f "$WORKDIR"/dummysys/etc/wicd/{wired-settings.conf,wireless-settings.conf}
+        rm -rf "$WORKDIR"/dummysys/etc/NetworkManager/system-connections/*
+        rm -f "$WORKDIR"/dummysys/etc/printcap
+        rm -f "$WORKDIR"/dummysys/etc/cups/printers.conf
+        touch "$WORKDIR"/dummysys/etc/printcap
+        touch "$WORKDIR"/dummysys/etc/cups/printers.conf
+        rm -rf "$WORKDIR"/dummysys/var/cache/gdm/*
+        rm -rf "$WORKDIR"/dummysys/var/lib/sudo/*
+        rm -rf "$WORKDIR"/dummysys/var/lib/AccountsService/users/*
+        rm -rf "$WORKDIR"/dummysys/var/lib/kdm/*
+        rm -rf "$WORKDIR"/dummysys/var/run/console/*
 
-        rm -f $WORKDIR/dummysys/etc/gdm/gdm.conf-custom
+        rm -f "$WORKDIR"/dummysys/etc/gdm/gdm.conf-custom
         #Setting up auto timed login for GDM3
-        cp -a /etc/${BRAND_ETC}/gdm $WORKDIR/dummysys/etc/
-        sed -i "s/LIVEUSER/$LIVEUSER/g" $WORKDIR/dummysys/etc/gdm/custom.conf
-        chmod +x $WORKDIR/dummysys/etc/gdm/custom.conf
-        chmod 755 $WORKDIR/dummysys/etc/gdm/custom.conf
+        cp -a /etc/"${BRAND_ETC}"/gdm "$WORKDIR"/dummysys/etc/
+        sed -i "s/LIVEUSER/$LIVEUSER/g" "$WORKDIR"/dummysys/etc/gdm/custom.conf
+        chmod +x "$WORKDIR"/dummysys/etc/gdm/custom.conf
+        chmod 755 "$WORKDIR"/dummysys/etc/gdm/custom.conf
         #Setting up auto timed login for MDM
-        cp -a /etc/${BRAND_ETC}/mdm $WORKDIR/dummysys/etc/
-        sed -i "s/LIVEUSER/$LIVEUSER/g" $WORKDIR/dummysys/etc/mdm/mdm.conf
-        chmod +x $WORKDIR/dummysys/etc/mdm/mdm.conf
-        chmod 755 $WORKDIR/dummysys/etc/mdm/mdm.conf
+        cp -a /etc/"${BRAND_ETC}"/mdm "$WORKDIR"/dummysys/etc/
+        sed -i "s/LIVEUSER/$LIVEUSER/g" "$WORKDIR"/dummysys/etc/mdm/mdm.conf
+        chmod +x "$WORKDIR"/dummysys/etc/mdm/mdm.conf
+        chmod 755 "$WORKDIR"/dummysys/etc/mdm/mdm.conf
 
-        find $WORKDIR/dummysys/var/mail/ -type f -exec rm -f {} \;
+        find "$WORKDIR"/dummysys/var/mail/ -type f -exec rm -f {} \;
         SPOOL_KEEP=""
         #preserve libreoffice extensions
         SPOOL_KEEP="${SPOOL_KEEP} -path $WORKDIR/dummysys/var/spool/libreoffice -prune "
         #preserve critical "at" file
         SPOOL_KEEP="${SPOOL_KEEP} ! -wholename $WORKDIR/dummysys/var/spool/cron/atjobs/.SEQ "
-        find $WORKDIR/dummysys/var/spool/ -type f ${SPOOL_KEEP} -exec rm -f {} \;
+        find "$WORKDIR"/dummysys/var/spool/ -type f ${SPOOL_KEEP} -exec rm -f {} \;
         if [ ! -d /run ]; then
-            find $WORKDIR/dummysys/var/run/ -type f -exec rm -f {} \;
+            find "$WORKDIR"/dummysys/var/run/ -type f -exec rm -f {} \;
         else
-            unlink $WORKDIR/dummysys/var/run
-            cd $WORKDIR/dummysys/var
+            unlink "$WORKDIR"/dummysys/var/run
+            cd "$WORKDIR"/dummysys/var
             ln -sf ../run run
         fi
 
@@ -447,58 +447,58 @@ FOO
         #   author thought it necessary to create these placeholder files.
         # for i in dpkg.log lastlog mail.log syslog auth.log daemon.log faillog lpr.log mail.warn user.log boot debug mail.err messages wtmp bootstrap.log dmesg kern.log mail.info
         #do
-        #    touch $WORKDIR/dummysys/var/log/${i}
+        #    touch "$WORKDIR"/dummysys/var/log/${i}
         #done
 
         log_msg "Cleaning up passwd, group, shadow and gshadow files for the live system"
-        grep '^[^:]*:[^:]*:[0-9]:' /etc/passwd > $WORKDIR/dummysys/etc/passwd
-        grep '^[^:]*:[^:]*:[0-9][0-9]:' /etc/passwd >> $WORKDIR/dummysys/etc/passwd
-        grep '^[^:]*:[^:]*:[0-9][0-9][0-9]:' /etc/passwd >> $WORKDIR/dummysys/etc/passwd
-        grep '^[^:]*:[^:]*:[3-9][0-9][0-9][0-9][0-9]:' /etc/passwd >> $WORKDIR/dummysys/etc/passwd
+        grep '^[^:]*:[^:]*:[0-9]:' /etc/passwd > "$WORKDIR"/dummysys/etc/passwd
+        grep '^[^:]*:[^:]*:[0-9][0-9]:' /etc/passwd >> "$WORKDIR"/dummysys/etc/passwd
+        grep '^[^:]*:[^:]*:[0-9][0-9][0-9]:' /etc/passwd >> "$WORKDIR"/dummysys/etc/passwd
+        grep '^[^:]*:[^:]*:[3-9][0-9][0-9][0-9][0-9]:' /etc/passwd >> "$WORKDIR"/dummysys/etc/passwd
 
-        grep '^[^:]*:[^:]*:[0-9]:' /etc/group > $WORKDIR/dummysys/etc/group
-        grep '^[^:]*:[^:]*:[0-9][0-9]:' /etc/group >> $WORKDIR/dummysys/etc/group
-        grep '^[^:]*:[^:]*:[0-9][0-9][0-9]:' /etc/group >> $WORKDIR/dummysys/etc/group
-        grep '^[^:]*:[^:]*:[3-9][0-9][0-9][0-9][0-9]:' /etc/group >> $WORKDIR/dummysys/etc/group
+        grep '^[^:]*:[^:]*:[0-9]:' /etc/group > "$WORKDIR"/dummysys/etc/group
+        grep '^[^:]*:[^:]*:[0-9][0-9]:' /etc/group >> "$WORKDIR"/dummysys/etc/group
+        grep '^[^:]*:[^:]*:[0-9][0-9][0-9]:' /etc/group >> "$WORKDIR"/dummysys/etc/group
+        grep '^[^:]*:[^:]*:[3-9][0-9][0-9][0-9][0-9]:' /etc/group >> "$WORKDIR"/dummysys/etc/group
 
-        grep '^[^:]*:[^:]*:[5-9][0-9][0-9]:' /etc/passwd | awk -F ":" '{print $1}'> $WORKDIR/tmpusers1
-        grep '^[^:]*:[^:]*:[1-9][0-9][0-9][0-9]:' /etc/passwd | awk -F ":" '{print $1}'> $WORKDIR/tmpusers2
-        grep '^[^:]*:[^:]*:[1-2][0-9][0-9][0-9][0-9]:' /etc/passwd | awk -F ":" '{print $1}'> $WORKDIR/tmpusers3
+        grep '^[^:]*:[^:]*:[5-9][0-9][0-9]:' /etc/passwd | awk -F ":" '{print $1}'> "$WORKDIR"/tmpusers1
+        grep '^[^:]*:[^:]*:[1-9][0-9][0-9][0-9]:' /etc/passwd | awk -F ":" '{print $1}'> "$WORKDIR"/tmpusers2
+        grep '^[^:]*:[^:]*:[1-2][0-9][0-9][0-9][0-9]:' /etc/passwd | awk -F ":" '{print $1}'> "$WORKDIR"/tmpusers3
 
-        cat $WORKDIR/tmpusers1 $WORKDIR/tmpusers2 $WORKDIR/tmpusers3 > $WORKDIR/tmpusers
-        rm -f $WORKDIR/tmpusers[0-9] &> /dev/null
+        cat "$WORKDIR"/tmpusers1 "$WORKDIR"/tmpusers2 "$WORKDIR"/tmpusers3 > "$WORKDIR"/tmpusers
+        rm -f "$WORKDIR"/tmpusers[0-9] &> /dev/null
 
-        #cp /etc/shadow $WORKDIR/dummysys/etc/shadow
-        #cp /etc/gshadow $WORKDIR/dummysys/etc/gshadow
+        #cp /etc/shadow "$WORKDIR"/dummysys/etc/shadow
+        #cp /etc/gshadow "$WORKDIR"/dummysys/etc/gshadow
 
-        cat $WORKDIR/tmpusers | while read LINE ;do
+        cat "$WORKDIR"/tmpusers | while read LINE ;do
 
-            echo $LINE | xargs -i sed -e 's/,{}$//g' $WORKDIR/dummysys/etc/group > $WORKDIR/dummysys/etc/group.new1
-            echo $LINE | xargs -i sed -e 's/,{},/,/g' $WORKDIR/dummysys/etc/group.new1 > $WORKDIR/dummysys/etc/group.new2
-            echo $LINE | xargs -i sed -e 's/:{}$/:/g' $WORKDIR/dummysys/etc/group.new2 > $WORKDIR/dummysys/etc/group.new3
-            echo $LINE | xargs -i sed -e 's/:{},/:/g' $WORKDIR/dummysys/etc/group.new3 > $WORKDIR/dummysys/etc/group
+            echo $LINE | xargs -i sed -e 's/,{}$//g' "$WORKDIR"/dummysys/etc/group > "$WORKDIR"/dummysys/etc/group.new1
+            echo $LINE | xargs -i sed -e 's/,{},/,/g' "$WORKDIR"/dummysys/etc/group.new1 > "$WORKDIR"/dummysys/etc/group.new2
+            echo $LINE | xargs -i sed -e 's/:{}$/:/g' "$WORKDIR"/dummysys/etc/group.new2 > "$WORKDIR"/dummysys/etc/group.new3
+            echo $LINE | xargs -i sed -e 's/:{},/:/g' "$WORKDIR"/dummysys/etc/group.new3 > "$WORKDIR"/dummysys/etc/group
 
             # /etc/shadow and /etc/gshadow needed for rescue mode boot root access - removed due to user creation issues for live boot
 
-           # echo $LINE | xargs -i sed -e '/^{}:/d' $WORKDIR/dummysys/etc/shadow > $WORKDIR/dummysys/etc/shadow.new
-            #sed -i -e 's/root:x:/root:!:/g' $WORKDIR/dummysys/etc/shadow.new
-            #mv $WORKDIR/dummysys/etc/shadow.new $WORKDIR/dummysys/etc/shadow
+           # echo $LINE | xargs -i sed -e '/^{}:/d' "$WORKDIR"/dummysys/etc/shadow > "$WORKDIR"/dummysys/etc/shadow.new
+            #sed -i -e 's/root:x:/root:!:/g' "$WORKDIR"/dummysys/etc/shadow.new
+            #mv "$WORKDIR"/dummysys/etc/shadow.new "$WORKDIR"/dummysys/etc/shadow
 
-            #echo $LINE | xargs -i sed -e '/^{}:/d' $WORKDIR/dummysys/etc/gshadow > $WORKDIR/dummysys/etc/gshadow.new1
-            #echo $LINE | xargs -i sed -e 's/,{}$//g' $WORKDIR/dummysys/etc/gshadow.new1 > $WORKDIR/dummysys/etc/gshadow.new2
-            #echo $LINE | xargs -i sed -e 's/,{},/,/g' $WORKDIR/dummysys/etc/gshadow.new2 > $WORKDIR/dummysys/etc/gshadow.new3
-            #echo $LINE | xargs -i sed -e 's/:{}$/:/g' $WORKDIR/dummysys/etc/gshadow.new3 > $WORKDIR/dummysys/etc/gshadow.new4
-            #echo $LINE | xargs -i sed -e 's/:{},/:/g' $WORKDIR/dummysys/etc/gshadow.new4 > $WORKDIR/dummysys/etc/gshadow
+            #echo $LINE | xargs -i sed -e '/^{}:/d' "$WORKDIR"/dummysys/etc/gshadow > "$WORKDIR"/dummysys/etc/gshadow.new1
+            #echo $LINE | xargs -i sed -e 's/,{}$//g' "$WORKDIR"/dummysys/etc/gshadow.new1 > "$WORKDIR"/dummysys/etc/gshadow.new2
+            #echo $LINE | xargs -i sed -e 's/,{},/,/g' "$WORKDIR"/dummysys/etc/gshadow.new2 > "$WORKDIR"/dummysys/etc/gshadow.new3
+            #echo $LINE | xargs -i sed -e 's/:{}$/:/g' "$WORKDIR"/dummysys/etc/gshadow.new3 > "$WORKDIR"/dummysys/etc/gshadow.new4
+            #echo $LINE | xargs -i sed -e 's/:{},/:/g' "$WORKDIR"/dummysys/etc/gshadow.new4 > "$WORKDIR"/dummysys/etc/gshadow
 
-            rm -f $WORKDIR/dummysys/etc/group.new* &> /dev/null
+            rm -f "$WORKDIR"/dummysys/etc/group.new* &> /dev/null
         done
     fi
 
     # make sure the adduser and autologin functions of casper as set according to the mode
     log_msg "Making sure adduser and autologin functions of casper are set properly"
-    [ "$1" = "dist" ] && [ ! -d $WORKDIR/dummysys/home ] && mkdir $WORKDIR/dummysys/home
+    [ "$1" = "dist" ] && [ ! -d "$WORKDIR"/dummysys/home ] && mkdir "$WORKDIR"/dummysys/home
     [ "$1" = "dist" ] && chmod 755 /usr/share/initramfs-tools/scripts/casper-bottom/*adduser /usr/share/initramfs-tools/scripts/casper-bottom/*autologin
-    [ "$1" = "backup" ] && [ -d $WORKDIR/dummysys/home ] && rm -rf $WORKDIR/dummysys/home
+    [ "$1" = "backup" ] && [ -d "$WORKDIR"/dummysys/home ] && rm -rf "$WORKDIR"/dummysys/home
     [ "$1" = "backup" ] && chmod 644 /usr/share/initramfs-tools/scripts/casper-bottom/*adduser /usr/share/initramfs-tools/scripts/casper-bottom/*autologin
 
     #virtualbox creates a user with id 999 which conflicts with casper's default
@@ -519,24 +519,24 @@ FOO
     # copy over some of the necessary stuff for the livecd
 
     #copy any preseed files
-    cp /etc/${BRAND_ETC}/preseed/* $WORKDIR/ISOTMP/preseed/
+    cp /etc/"${BRAND_ETC}"/preseed/* "$WORKDIR"/ISOTMP/preseed/
 
     #BOOT Type is isolinux
     log_msg "Copying memtest86+ for the live system"
-    cp /boot/memtest86+.bin $WORKDIR/ISOTMP/install/memtest
+    cp /boot/memtest86+.bin "$WORKDIR"/ISOTMP/install/memtest
 
     #EFI BOOT
     log_msg "Copying EFI Boot for the live system"
-    cp -a /usr/lib/${BRAND_NAME}/boot $WORKDIR/ISOTMP/
-    cp -a /usr/lib/${BRAND_NAME}/EFI $WORKDIR/ISOTMP/
-    #cp $WORKDIR/ISOTMP/EFI/BOOT/BOOTx64.EFI $WORKDIR/ISOTMP/EFI/BOOT/fallback.efi
-    sed -i "s/__LIVECDLABEL__/$LIVECDLABEL/g" $WORKDIR/ISOTMP/boot/grub/grub.cfg
-    sed -i "s/__LIVECDLABEL__/$LIVECDLABEL/g" $WORKDIR/ISOTMP/boot/grub/loopback.cfg
+    cp -a /usr/lib/"${BRAND_NAME}"/boot "$WORKDIR"/ISOTMP/
+    cp -a /usr/lib/"${BRAND_NAME}"/EFI "$WORKDIR"/ISOTMP/
+    #cp "$WORKDIR"/ISOTMP/EFI/BOOT/BOOTx64.EFI "$WORKDIR"/ISOTMP/EFI/BOOT/fallback.efi
+    sed -i "s/__LIVECDLABEL__/$LIVECDLABEL/g" "$WORKDIR"/ISOTMP/boot/grub/grub.cfg
+    sed -i "s/__LIVECDLABEL__/$LIVECDLABEL/g" "$WORKDIR"/ISOTMP/boot/grub/loopback.cfg
 
     #Downloading packages for offline install
     log_msg "Downloading packages for CD"
-    mkdir -p $WORKDIR/ISOTMP/pool
-    cd $WORKDIR/ISOTMP/pool
+    mkdir -p "$WORKDIR"/ISOTMP/pool
+    cd "$WORKDIR"/ISOTMP/pool
 
     apt-get download -q \
         b43-fwcutter \
@@ -554,60 +554,60 @@ FOO
         secureboot-db \
         shim shim-signed
 
-    mkdir -p $WORKDIR/ISOTMP/dists
-    cd $WORKDIR/ISOTMP/
+    mkdir -p "$WORKDIR"/ISOTMP/dists
+    cd "$WORKDIR"/ISOTMP/
     dpkg-scanpackages pool &> /dev/null | gzip -9c > dists/Packages.gz
 
     # check and see if they have a custom isolinux already setup. eg. they copied over
     # the isolinux folder from their original livecd or made a custom one for their distro
 
-    if [ ! -f /etc/${BRAND_ETC}/customisolinux/isolinux.cfg ]; then
+    if [ ! -f /etc/"${BRAND_ETC}"/customisolinux/isolinux.cfg ]; then
         log_msg "Creating isolinux setup for the live system"
-        find /usr -name 'isolinux.bin' -exec cp {} $WORKDIR/ISOTMP/isolinux/ \;
+        find /usr -name 'isolinux.bin' -exec cp {} "$WORKDIR"/ISOTMP/isolinux/ \;
         VESAMENU=$(find /usr -print0 | grep -EzZ --max-count=1 "bios/vesamenu.c32|syslinux/vesamenu.c32")
         if [ -z "$VESAMENU" ]; then
             log_msg "   unable to find vesamenu.c32 - skipping"
         else
-            cp $VESAMENU $WORKDIR/ISOTMP/isolinux/
+            cp $VESAMENU "$WORKDIR"/ISOTMP/isolinux/
         fi
         LDLINUX=$(find /usr -print0 | grep -EzZ --max-count=1 "bios/ldlinux.c32|syslinux/ldlinux.c32")
         if [ -z "$LDLINUX" ]; then
             log_msg "   unable to find ldlinux.c32 - skipping"
         else
-            cp $LDLINUX $WORKDIR/ISOTMP/isolinux/
+            cp $LDLINUX "$WORKDIR"/ISOTMP/isolinux/
         fi
         LIBUTIL=$(find /usr -print0 | grep -EzZ --max-count=1 "bios/libutil.c32|syslinux/libutil.c32")
         if [ -z "$LIBUTIL" ]; then
             log_msg "   unable to find libutil.c32 - skipping"
         else
-            cp $LIBUTIL $WORKDIR/ISOTMP/isolinux/
+            cp $LIBUTIL "$WORKDIR"/ISOTMP/isolinux/
         fi
         LIBCOM=$(find /usr -print0 | grep -EzZ --max-count=1 "bios/libcom32.c32|syslinux/libcom32.c32")
         if [ -z "$LIBCOM" ]; then
             log_msg "   unable to find libcom32.c32 - skipping"
         else
-            cp $LIBCOM $WORKDIR/ISOTMP/isolinux/
+            cp $LIBCOM "$WORKDIR"/ISOTMP/isolinux/
         fi
         MENU=$(find /usr -print0 | grep -EzZ --max-count=1 "bios/menu.c32|syslinux/menu.c32")
         if [ -z "$MENU" ]; then
             log_msg "   unable to find menu.c32 - skipping"
         else
-            cp $MENU $WORKDIR/ISOTMP/isolinux/
+            cp $MENU "$WORKDIR"/ISOTMP/isolinux/
         fi
         # setup isolinux for the livecd
         VERSION=$(lsb_release -r | awk '{print $2}' | awk -F "." '{print $1}')
-        sed -e 's/__LIVECDLABEL__/'"$LIVECDLABEL"'/g' /etc/${BRAND_ETC}/isolinux/isolinux.cfg.vesamenu > \
-        $WORKDIR/ISOTMP/isolinux/isolinux.cfg
-        cp $SPLASHPNG $WORKDIR/ISOTMP/isolinux/splash.png
+        sed -e 's/__LIVECDLABEL__/'"$LIVECDLABEL"'/g' /etc/"${BRAND_ETC}"/isolinux/isolinux.cfg.vesamenu > \
+        "$WORKDIR"/ISOTMP/isolinux/isolinux.cfg
+        cp $SPLASHPNG "$WORKDIR"/ISOTMP/isolinux/splash.png
     else
         log_msg "Copying your custom isolinux setup to the live system"
-        cp /etc/${BRAND_ETC}/customisolinux/* $WORKDIR/ISOTMP/isolinux/ &> /dev/null
+        cp /etc/"${BRAND_ETC}"/customisolinux/* "$WORKDIR"/ISOTMP/isolinux/ &> /dev/null
     fi
 
     log_msg "Checking the ARCH of the system and setting the README.diskdefines file"
     ARCH=$(archdetect | awk -F "/" '{print $1}')
 
-    cat > $WORKDIR/ISOTMP/README.diskdefines <<FOO
+    cat > "$WORKDIR"/ISOTMP/README.diskdefines <<FOO
 #define DISKNAME  $LIVECDLABEL
 #define TYPE  binary
 #define TYPEbinary  1
@@ -618,17 +618,17 @@ FOO
 #define TOTALNUM  0
 #define TOTALNUM0  1
 FOO
-    cp $WORKDIR/ISOTMP/README.diskdefines $WORKDIR/ISOTMP/casper/README.diskdefines
+    cp "$WORKDIR"/ISOTMP/README.diskdefines "$WORKDIR"/ISOTMP/casper/README.diskdefines
 
     sleep 1
 
     # Step 4 - Make the filesystem.manifest and filesystem.manifest-desktop
     log_msg "Creating filesystem.manifest and filesystem.manifest-desktop"
-    dpkg-query -W --showformat='${Package} ${Version}\n' > $WORKDIR/ISOTMP/casper/filesystem.manifest
+    dpkg-query -W --showformat='${Package} ${Version}\n' > "$WORKDIR"/ISOTMP/casper/filesystem.manifest
 
-    cp $WORKDIR/ISOTMP/casper/filesystem.manifest $WORKDIR/ISOTMP/casper/filesystem.manifest-desktop
+    cp "$WORKDIR"/ISOTMP/casper/filesystem.manifest "$WORKDIR"/ISOTMP/casper/filesystem.manifest-desktop
     # Suggested by lkjoel from Ubuntu Forums - Joel Leclerc to remove the frontend so the Install menu item is not on the installed system
-    sed -i '/ubiquity-frontend/d' $WORKDIR/ISOTMP/casper/filesystem.manifest-desktop
+    sed -i '/ubiquity-frontend/d' "$WORKDIR"/ISOTMP/casper/filesystem.manifest-desktop
 
     sleep 1
 
@@ -693,7 +693,7 @@ export HOST="$LIVEUSER"
 export BUILD_SYSTEM="Ubuntu"
 export FLAVOUR="$LIVEUSER"
 FOO
-    cp /etc/casper.conf $WORKDIR/dummysys/etc/
+    cp /etc/casper.conf "$WORKDIR"/dummysys/etc/
 
     sleep 1
 
@@ -724,21 +724,21 @@ FOO
     mkinitramfs -o /boot/initrd.img-$(uname -r) $(uname -r)
 
     log_msg "Copying your kernel and initrd for the livecd"
-    cp /boot/vmlinuz-$(uname -r) $WORKDIR/ISOTMP/casper/vmlinuz
-    cp /boot/initrd.img-$(uname -r) $WORKDIR/ISOTMP/casper/initrd.gz
-    if [ ! -f $WORKDIR/ISOTMP/casper/vmlinuz ]; then
+    cp /boot/vmlinuz-$(uname -r) "$WORKDIR"/ISOTMP/casper/vmlinuz
+    cp /boot/initrd.img-$(uname -r) "$WORKDIR"/ISOTMP/casper/initrd.gz
+    if [ ! -f "$WORKDIR"/ISOTMP/casper/vmlinuz ]; then
         log_msg "Missing valid kernel. Exiting"
         exit 1
     fi
-    if [ ! -f $WORKDIR/ISOTMP/casper/initrd.gz ]; then
+    if [ ! -f "$WORKDIR"/ISOTMP/casper/initrd.gz ]; then
         log_msg "Missing valid initial ramdisk. Exiting"
         exit 1
     fi
 
     # Step 6 - Make filesystem.squashfs
 
-    if [ -f $WORKDIR/ISOTMP/casper/filesystem.squashfs ]; then
-        rm -f $WORKDIR/ISOTMP/casper/filesystem.squashfs &> /dev/null
+    if [ -f "$WORKDIR"/ISOTMP/casper/filesystem.squashfs ]; then
+        rm -f "$WORKDIR"/ISOTMP/casper/filesystem.squashfs &> /dev/null
     fi
 
     log_msg "Creating filesystem.squashfs   ... this will take a while so be patient"
@@ -749,10 +749,10 @@ FOO
     for d in $INCLUDES;
     do
         # remove folders from dummysys so that real ones would be included
-        rmdir --ignore-fail-on-non-empty  $WORKDIR/dummysys${d}
+        rmdir --ignore-fail-on-non-empty  "$WORKDIR"/dummysys${d}
     done
 
-    for d in $(ls -d $WORKDIR/dummysys/*); do
+    for d in $(ls -d "$WORKDIR"/dummysys/*); do
         REALFOLDERS="$REALFOLDERS $d"
     done
 
@@ -768,55 +768,55 @@ FOO
         done
     fi
 
-    mksquashfs $INCLUDES $REALFOLDERS $WORKDIR/ISOTMP/casper/filesystem.squashfs -no-duplicates $SQUASHFSOPTS -e root/.local/Trash root/.thumbnails root/.cache root/.bash_history root/.lesshst root/.nano_history /boot/efi/EFI /boot/grub $BASEWORKDIR $EXCLUDES 2>>$WORKDIR/${BRAND_LOG}
+    mksquashfs $INCLUDES $REALFOLDERS "$WORKDIR"/ISOTMP/casper/filesystem.squashfs -no-duplicates $SQUASHFSOPTS -e root/.local/Trash root/.thumbnails root/.cache root/.bash_history root/.lesshst root/.nano_history /boot/efi/EFI /boot/grub $BASEWORKDIR $EXCLUDES 2>>"$WORKDIR"/"${BRAND_LOG}"
 
 
     sleep 1
 
     #add some stuff the log in case of problems so I can troubleshoot it easier
     log_msg "Updating the ${BRAND_LOG}"
-    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
-    echo "Mount information" >>$WORKDIR/${BRAND_LOG}
-    mount >>$WORKDIR/${BRAND_LOG}
-    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
-    echo "Disk size information" >>$WORKDIR/${BRAND_LOG}
-    df -h >>$WORKDIR/${BRAND_LOG}
-    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
-    echo "Casper Script info" >>$WORKDIR/${BRAND_LOG}
-    ls -l /usr/share/initramfs-tools/scripts/casper-bottom/ >>$WORKDIR/${BRAND_LOG}
-    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
-    echo "/etc/${BRAND_ETC}/${BRAND_NAME}.conf info" >>$WORKDIR/${BRAND_LOG}
-    cat /etc/${BRAND_ETC}/${BRAND_NAME}.conf >>$WORKDIR/${BRAND_LOG}
-    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
-    echo "/etc/casper.conf info" >>$WORKDIR/${BRAND_LOG}
-    cat /etc/casper.conf >>$WORKDIR/${BRAND_LOG}
-    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
-    echo "/etc/passwd info" >>$WORKDIR/${BRAND_LOG}
-    cat $WORKDIR/dummysys/etc/passwd >>$WORKDIR/${BRAND_LOG}
-    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
-    echo "/etc/group info" >>$WORKDIR/${BRAND_LOG}
-    cat $WORKDIR/dummysys/etc/group >>$WORKDIR/${BRAND_LOG}
-    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
-    echo "/etc/X11/default-display-manager info" >>$WORKDIR/${BRAND_LOG}
-    cat $WORKDIR/dummysys/etc/X11/default-display-manager >>$WORKDIR/${BRAND_LOG}
-    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
-    echo "/etc/skel info" >>$WORKDIR/${BRAND_LOG}
-    find /etc/skel >>$WORKDIR/${BRAND_LOG}
-    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
-    echo "lsb-release info" >>$WORKDIR/${BRAND_LOG}
-    cat $WORKDIR/dummysys/etc/lsb-release >>$WORKDIR/${BRAND_LOG}
-    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
-    echo "${BRAND_NAME} version info" >>$WORKDIR/${BRAND_LOG}
-    cat $WORKDIR/dummysys/etc/${BRAND_ETC}/${BRAND_NAME}.version >>$WORKDIR/${BRAND_LOG}
-    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
-    echo "ISOTMP info" >>$WORKDIR/${BRAND_LOG}
-    ls -Rl $WORKDIR/ISOTMP >>$WORKDIR/${BRAND_LOG}
-    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
-    echo "$WORKDIR/tmpusers info" >>$WORKDIR/${BRAND_LOG}
-    cat $WORKDIR/tmpusers >>$WORKDIR/${BRAND_LOG}
-    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
-    echo "Command-line options = $@" >>$WORKDIR/${BRAND_LOG}
-    echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
+    echo "--------------------------------------------" >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "Mount information" >>"$WORKDIR"/"${BRAND_LOG}"
+    mount >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "--------------------------------------------" >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "Disk size information" >>"$WORKDIR"/"${BRAND_LOG}"
+    df -h >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "--------------------------------------------" >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "Casper Script info" >>"$WORKDIR"/"${BRAND_LOG}"
+    ls -l /usr/share/initramfs-tools/scripts/casper-bottom/ >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "--------------------------------------------" >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "/etc/"${BRAND_ETC}"/"${BRAND_NAME}.conf" info" >>"$WORKDIR"/"${BRAND_LOG}"
+    cat /etc/"${BRAND_ETC}"/"${BRAND_NAME}.conf" >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "--------------------------------------------" >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "/etc/casper.conf info" >>"$WORKDIR"/"${BRAND_LOG}"
+    cat /etc/casper.conf >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "--------------------------------------------" >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "/etc/passwd info" >>"$WORKDIR"/"${BRAND_LOG}"
+    cat "$WORKDIR"/dummysys/etc/passwd >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "--------------------------------------------" >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "/etc/group info" >>"$WORKDIR"/"${BRAND_LOG}"
+    cat "$WORKDIR"/dummysys/etc/group >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "--------------------------------------------" >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "/etc/X11/default-display-manager info" >>"$WORKDIR"/"${BRAND_LOG}"
+    cat "$WORKDIR"/dummysys/etc/X11/default-display-manager >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "--------------------------------------------" >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "/etc/skel info" >>"$WORKDIR"/"${BRAND_LOG}"
+    find /etc/skel >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "--------------------------------------------" >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "lsb-release info" >>"$WORKDIR"/"${BRAND_LOG}"
+    cat "$WORKDIR"/dummysys/etc/lsb-release >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "--------------------------------------------" >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "${BRAND_NAME} version info" >>"$WORKDIR"/"${BRAND_LOG}"
+    cat "$WORKDIR"/dummysys/etc/"${BRAND_ETC}"/"${BRAND_NAME}.version" >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "--------------------------------------------" >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "ISOTMP info" >>"$WORKDIR"/"${BRAND_LOG}"
+    ls -Rl "$WORKDIR"/ISOTMP >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "--------------------------------------------" >>"$WORKDIR"/"${BRAND_LOG}"
+    echo ""$WORKDIR"/tmpusers info" >>"$WORKDIR"/"${BRAND_LOG}"
+    cat "$WORKDIR"/tmpusers >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "--------------------------------------------" >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "Command-line options = $@" >>"$WORKDIR"/"${BRAND_LOG}"
+    echo "--------------------------------------------" >>"$WORKDIR"/"${BRAND_LOG}"
 
     # cleanup the install icons as they aren't needed on the current system
     if [ "$1" = "backup" ]; then
@@ -839,7 +839,7 @@ FOO
     sleep 1
 
     #checking the size of the compressed filesystem to ensure it meets the iso9660 spec for a single file"
-    SQUASHFSSIZE=$(ls -s $WORKDIR/ISOTMP/casper/filesystem.squashfs | awk -F " " '{print $1}')
+    SQUASHFSSIZE=$(ls -s "$WORKDIR"/ISOTMP/casper/filesystem.squashfs | awk -F " " '{print $1}')
     if [ "$SQUASHFSSIZE" -gt "3999999" ]; then
         log_msg "The compressed filesystem is larger than genisoimage allows for a single file. You must try to reduce the amount of data you are backing up and try again."
         exit 1
@@ -848,14 +848,14 @@ FOO
     #add filesystem size for lucid
     log_msg "Calculating the installed filesystem size for the installer"
 
-    unsquashfs -lls $WORKDIR/ISOTMP/casper/filesystem.squashfs | grep -v " inodes " | grep -v "unsquashfs:" | awk '{print $3}' | grep -v "," > /tmp/size.tmp
+    unsquashfs -lls "$WORKDIR"/ISOTMP/casper/filesystem.squashfs | grep -v " inodes " | grep -v "unsquashfs:" | awk '{print $3}' | grep -v "," > /tmp/size.tmp
 
     for i in $(cat /tmp/size.tmp); do a=$(($a+$i)); done
-    echo $a > $WORKDIR/ISOTMP/casper/filesystem.size
+    echo $a > "$WORKDIR"/ISOTMP/casper/filesystem.size
 
     log_msg "Removing ${BRAND_INIT}-firstboot from system startup"
-    update-rc.d -f ${BRAND_INIT}-firstboot remove
-    chmod 644 /etc/init.d/${BRAND_INIT}-firstboot
+    update-rc.d -f "${BRAND_INIT}-firstboot" remove
+    chmod 644 /etc/init.d/"${BRAND_INIT}-firstboot"
 }
 
 iso (){
@@ -867,12 +867,12 @@ iso (){
 
     # check to see if the cd filesystem exists
 
-    if [ ! -f "$WORKDIR/ISOTMP/casper/filesystem.squashfs" ]; then
+    if [ ! -f "$WORKDIR"/ISOTMP/casper/filesystem.squashfs ]; then
         log_msg "The filesystem.squashfs filesystem is missing.  Either there was a problem creating the compressed filesystem or you are trying to run sudo ${BRAND_BIN} dist iso before sudo ${BRAND_BIN} dist cdfs"
         exit 1
     fi
 
-    SQUASHFSSIZE=$(ls -s $WORKDIR/ISOTMP/casper/filesystem.squashfs | awk -F " " '{print $1}')
+    SQUASHFSSIZE=$(ls -s "$WORKDIR"/ISOTMP/casper/filesystem.squashfs | awk -F " " '{print $1}')
     if [ "$SQUASHFSSIZE" -gt "3999999" ]; then
         log_msg "The compressed filesystem is larger than genisoimage allows for a single file. You must try to reduce the amount of data you are backing up and try again."
         exit 1
@@ -881,19 +881,19 @@ iso (){
     #Step 6.5 - Added by Tim Farley. Make ISO compatible with Ubuntu Startup Disk Creator (Karmic).
     log_msg "Making disk compatible with Ubuntu Startup Disk Creator."
     . /etc/lsb-release
-    touch $WORKDIR/ISOTMP/ubuntu
-    touch $WORKDIR/ISOTMP/.disk/base_installable
-    echo "full_cd/single" > $WORKDIR/ISOTMP/.disk/cd_type
+    touch "$WORKDIR"/ISOTMP/ubuntu
+    touch "$WORKDIR"/ISOTMP/.disk/base_installable
+    echo "full_cd/single" > "$WORKDIR"/ISOTMP/.disk/cd_type
     ARCH=$(archdetect | awk -F "/" '{print $1}')
     # starting with 12.04 need to have correct ubuntu version or startup disk creator uses syslinux-legacy which won't work
     DISKINFONAME=$(echo $LIVECDLABEL | awk '{print $1}')
-    echo $DISKINFONAME $DISTRIB_RELEASE - Release $ARCH > $WORKDIR/ISOTMP/.disk/info
-    echo $LIVECDURL > $WORKDIR/ISOTMP/.disk/release_notes_url
+    echo $DISKINFONAME $DISTRIB_RELEASE - Release $ARCH > "$WORKDIR"/ISOTMP/.disk/info
+    echo $LIVECDURL > "$WORKDIR"/ISOTMP/.disk/release_notes_url
 
     # Step 7 - Make md5sum.txt for the files on the livecd - this is used during the
     # checking function of the livecd
     log_msg "Creating md5sum.txt for the livecd/dvd"
-    cd $WORKDIR/ISOTMP && find . -type f -print0 | xargs -0 md5sum > md5sum.txt
+    cd "$WORKDIR"/ISOTMP && find . -type f -print0 | xargs -0 md5sum > md5sum.txt
 
     #isolinux mode
 
@@ -906,15 +906,15 @@ iso (){
 
     # Step 8 - Make the ISO file
     log_msg "Creating $CUSTOMISO in $WORKDIR"
-    $CREATEISO -iso-level 3 -quiet -r -V "$LIVECDLABEL" -cache-inodes -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -o $WORKDIR/$CUSTOMISO "$WORKDIR/ISOTMP" 2>>$WORKDIR/${BRAND_LOG} 1>>$WORKDIR/${BRAND_LOG}
-    if [ ! -f $WORKDIR/$CUSTOMISO ]; then
+    $CREATEISO -iso-level 3 -quiet -r -V "$LIVECDLABEL" -cache-inodes -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -o "$WORKDIR"/"$CUSTOMISO" "$WORKDIR"/ISOTMP &>>"$WORKDIR"/"${BRAND_LOG}"
+    if [ ! -f "$WORKDIR"/"$CUSTOMISO" ]; then
         log_msg "The iso was not created. There was a problem. Exiting"
         exit 1
     fi
 
     # Make the iso hybrid so it can be simply dd copied to a usb flash drive.
     log_msg "Making $CUSTOMISO a hybrid iso"
-    isohybrid --uefi $WORKDIR/$CUSTOMISO
+    isohybrid --uefi "$WORKDIR"/"$CUSTOMISO"
 
     # create the md5 sum file so the user doesn't have to - this is good so the
     # iso file can later be tested to ensure it hasn't become corrupted
@@ -922,11 +922,11 @@ iso (){
     log_msg "Creating $CUSTOMISO.md5 in $WORKDIR"
 
     cd $WORKDIR
-    md5sum $CUSTOMISO > $CUSTOMISO.md5
+    md5sum "$CUSTOMISO" > "$CUSTOMISO.md5"
 
     sleep 1
 
-    ISOSIZE="$(ls -hs $WORKDIR/$CUSTOMISO | awk '{print $1}')"
+    ISOSIZE=$(ls -hs "$WORKDIR"/"$CUSTOMISO" | awk '{print $1}')
 
     log_msg "$WORKDIR/$CUSTOMISO which is $ISOSIZE in size is ready to be burned or tested in a virtual machine."
 
