@@ -775,7 +775,7 @@ FOO
     sleep 1
 
     #add some stuff the log in case of problems so I can troubleshoot it easier
-    msg_log "Updating the ${BRAND_LOG}"
+    log_msg "Updating the ${BRAND_LOG}"
     echo "--------------------------------------------" >>$WORKDIR/${BRAND_LOG}
     echo "Mount information" >>$WORKDIR/${BRAND_LOG}
     mount >>$WORKDIR/${BRAND_LOG}
