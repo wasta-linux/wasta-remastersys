@@ -463,6 +463,21 @@ FOO
     [ "$1" = "backup" ] && [ -d $WORKDIR/dummysys/home ] && rm -rf $WORKDIR/dummysys/home
     [ "$1" = "backup" ] && chmod 644 /usr/share/initramfs-tools/scripts/casper-bottom/*adduser /usr/share/initramfs-tools/scripts/casper-bottom/*autologin
 
+    #virtualbox creates a user with id 999 which conflicts with casper's default
+    #  causing login to fail
+    if [ "$(getent passwd 999)" = "" ]; then
+        echo "   good: userID 999 is unused - no need to adjust anything"
+    elif [ "$(getent passwd 990)" = "" ]; then
+        echo "   good: userID 990 is unused - adjusting LIVECD user to use that"
+        sed -i -e 's@user-uid 999@user-uid 990@' \
+            /usr/share/initramfs-tools/scripts/casper-bottom/*adduser
+    else
+        echo && echo 
+        echo "*  ERROR: problem finding a free userid. "
+        echo "*     Conflict with $(getent passwd 999 | awk -F: '{ print $1}')"
+        echo && echo 
+    fi
+
     # copy over some of the necessary stuff for the livecd
 
     #copy any preseed files
