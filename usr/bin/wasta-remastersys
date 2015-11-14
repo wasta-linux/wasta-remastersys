@@ -595,7 +595,7 @@ FOO
             cp $MENU "$WORKDIR"/ISOTMP/isolinux/
         fi
         # setup isolinux for the livecd
-        VERSION=$(lsb_release -r | awk '{print $2}' | awk -F "." '{print $1}')
+#        VERSION=$(lsb_release -r | awk '{print $2}' | awk -F "." '{print $1}')
         sed -e 's/__LIVECDLABEL__/'"$LIVECDLABEL"'/g' /etc/"${BRAND_ETC}"/isolinux/isolinux.cfg.vesamenu > \
         "$WORKDIR"/ISOTMP/isolinux/isolinux.cfg
         cp $SPLASHPNG "$WORKDIR"/ISOTMP/isolinux/splash.png
