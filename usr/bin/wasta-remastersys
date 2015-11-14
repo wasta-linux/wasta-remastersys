@@ -63,7 +63,9 @@ do_start() {
         rm -f /usr/local/ZebraNetworkSystems/NeoRouter/Client.xml &> /dev/null
         #boot-repair: only removed if added by ${BRAND_BIN}.
         apt-get remove -y -q boot-repair &> /dev/null
+        #recreate SSH keys
         dpkg-reconfigure openssh-server &> /dev/null
+        #ensure all required 'at' files exist with proper file permission
         dpkg-reconfigure at &> /dev/null
 
         #Place your custom commands below this line
@@ -284,7 +286,19 @@ cdfs (){
     fi
 
     # Check using lightdm and if it is setup properly for a live default session
-    [ "$(grep lightdm /etc/X11/default-display-manager)" != "" ] && [ ! -f /etc/lightdm/lightdm.conf ] && [ ! -f /usr/share/xsessions/ubuntu.desktop ] && log_msg "Lightdm not setup properly. You must set your default desktop with lightdm prior to remastering" && exit 1
+    if [ "$(grep lightdm /etc/X11/default-display-manager)" != "" ]; then
+        if [ ! -f /etc/lightdm/lightdm.conf ]; then
+            [ ! -f /usr/share/xsessions/ubuntu.desktop ] && log_msg "Lightdm not setup properly. You must set your default desktop with lightdm prior to remastering" && exit 1
+        else
+            AUTOLOGIN=$(grep -s '^autologin-user=' /etc/lightdm/lightdm.conf | awk -F= '{print $1}')
+            if [ "${AUTOLOGIN}" != "${LIVEUSER}" ] ; then
+              echo && echo 
+              log_msg "WARNING: LIVEUSER already defined in /etc/lightdm/lightdm.conf."
+              log_msg "         No autologin until ${LIVEUSER} = ${AUTOLOGIN}"
+              echo && echo
+            fi
+        fi
+    fi
 
     # prevent the installer from changing the apt sources.list
     if [ ! -f "/usr/share/ubiquity/apt-setup.save" ]; then
