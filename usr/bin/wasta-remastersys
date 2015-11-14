@@ -64,9 +64,13 @@ do_start() {
         #boot-repair: only removed if added by ${BRAND_BIN}.
         apt-get remove -y -q boot-repair &> /dev/null
         #recreate SSH keys
-        dpkg-reconfigure openssh-server &> /dev/null
+        if [ "$(dpkg-query -W --showformat='${Status}\n' openssh-server 2> /dev/null|grep 'install ok installed')" ]; then
+            dpkg-reconfigure openssh-server &> /dev/null
+        fi
         #ensure all required 'at' files exist with proper file permission
-        dpkg-reconfigure at &> /dev/null
+        if [ "$(dpkg-query -W --showformat='${Status}\n' at 2> /dev/null|grep 'install ok installed')" ]; then
+            dpkg-reconfigure at &> /dev/null
+        fi
 
         #Place your custom commands below this line
 
