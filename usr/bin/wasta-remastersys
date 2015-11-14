@@ -38,20 +38,20 @@ do_start() {
 
             # wasta-remastersys additions
             # NeoRouter: clear any config
-            rm -f /usr/local/ZebraNetworkSystems/NeoRouter/Client.xml &> /dev/null   
+            rm -f /usr/local/ZebraNetworkSystems/NeoRouter/Client.xml &> /dev/null
             apt-get remove -y -q boot-repair &> /dev/null
             dpkg-reconfigure openssh-server &> /dev/null
             dpkg-reconfigure at &> /dev/null
-            
+
             #Place your custom commands below this line
 
             #Place your custom commands above this line
-            
+
             ES=\$?
             [ "\$VERBOSE" != no ] && log_end_msg \$ES
             return \$ES
         fi
-} 
+}
 
 case "\$1" in
     start)
@@ -73,20 +73,20 @@ FOO
 
 fi
 
-# load the wasta-remastersys.conf file 
+# load the wasta-remastersys.conf file
 . /etc/wasta-remastersys.conf
 
 # if the wasta-remastersys.conf file is incorrect or missing, make sure to set defaults
 
 if [ "$LIVEUSER" = "" ]; then
     #Somebody must have removed the username from the configuration file
-    echo 
+    echo
     #this is a custom live user
     LIVEUSER="custom"
 fi
 
 #make sure live user is all lowercase
-LIVEUSER="$(echo $LIVEUSER | awk '{print tolower ($0)}')"
+LIVEUSER=${LIVEUSER,,}
 
 
 if [ "$WORKDIR" = "" ]; then
@@ -107,7 +107,7 @@ fi
 
 touch $WORKDIR/wasta-remastersys.log
 
-#added log_msg to reduce size. code provided by Ivailo (a.k.a. SmiL3y) 
+#added log_msg to reduce size. code provided by Ivailo (a.k.a. SmiL3y)
 log_msg() {
     echo "$1"
     echo "$1" >>$WORKDIR/wasta-remastersys.log
@@ -127,21 +127,24 @@ if [ "$SQUASHFSOPTS" = "" ]; then
     SQUASHFSOPTS="-no-recovery -always-use-fragments -b 1M -no-duplicates -comp xz"
 fi
 
-if [ "$BACKUPSHOWINSTALL" = "0" -o "$BACKUPSHOWINSTALL" = "1" ]; then
-    echo
-else
+if ! [ "$BACKUPSHOWINSTALL" = "0" -o "$BACKUPSHOWINSTALL" = "1" ]; then
     BACKUPSHOWINSTALL="1"
 fi
 
-if [ "$2" = "cdfs" ]; then
-    log_msg "Creating the cd filesystem only"
-elif [ "$2" = "iso" ]; then
-    log_msg "Creating the iso file only"
-elif [ "$2" = "" ]; then
-    echo " "
-else
-    CUSTOMISO="$2"
-fi
+case $2 in
+    iso )
+        log_msg "Creating the iso file only"
+    ;;
+    cdfs )
+        log_msg "Creating the cd filesystem only"
+    ;;
+    "" )
+        echo " "
+    ;;    
+    * )
+        CUSTOMISO="$2"
+    ;;
+esac
 
 if [ "$3" != "" ]; then
     CUSTOMISO="$3"
@@ -179,7 +182,7 @@ case $1  in
         echo "   sudo wasta-remastersys backup   (to make a livecd/dvd backup of your system)"
         echo " "
         echo "   sudo wasta-remastersys backup custom.iso"
-        echo "                             (to make a livecd/dvd backup and call the iso custom.iso)" 
+        echo "                             (to make a livecd/dvd backup and call the iso custom.iso)"
         echo " "
         echo "   sudo wasta-remastersys clean    (to clean up temporary files of wasta-remastersys)"
         echo " "
@@ -203,18 +206,13 @@ esac
 
 cdfs (){
 
-# PinguyBuilder had done an apt-get clean: bad! cache not put in dest system
-#   so no problem: don't remove user's cache!
-log_msg "Performing apt-get autoremove before building"
-    apt-get -y -q autoremove
+    log_msg "Enabling wasta-remastersys-firstboot"
+    chmod 755 /etc/init.d/wasta-remastersys-firstboot
+    update-rc.d wasta-remastersys-firstboot defaults
 
-log_msg "Enabling wasta-remastersys-firstboot"
-chmod 755 /etc/init.d/wasta-remastersys-firstboot
-update-rc.d wasta-remastersys-firstboot defaults
-
-log_msg "Checking filesystem type of the Working Folder"
-DIRTYPE=$(df -T -P $WORKDIR | grep "^\/dev" | awk '{print $2}')
-log_msg "$WORKDIR is on a $DIRTYPE filesystem"
+    log_msg "Checking filesystem type of the Working Folder"
+    DIRTYPE=$(df -T -P $WORKDIR | grep "^\/dev" | awk '{print $2}')
+    log_msg "$WORKDIR is on a $DIRTYPE filesystem"
 
     #removing popularity-contest as it causes a problem when installing with ubiquity
     log_msg "Making sure popularity contest is not installed"
@@ -227,7 +225,7 @@ log_msg "$WORKDIR is on a $DIRTYPE filesystem"
     #Installing isolinux if needed
     log_msg "Making sure isolinux is installed"
     apt-get -y -q install isolinux syslinux-utils &> /dev/null
-    
+
     #Installing boot-repair if not already installed
     if [ -x /usr/bin/boot-repair ];
     then
@@ -246,42 +244,38 @@ log_msg "$WORKDIR is on a $DIRTYPE filesystem"
         apt-get -y -q remove ubiquity-frontend-gtk &> /dev/null
     else
         log_msg "Installing the Ubiquity GTK frontend"
-        apt-get --quiet install --yes --quiet ubiquity-frontend-gtk &> /dev/null  
+        apt-get -y -q install --quiet ubiquity-frontend-gtk &> /dev/null
+        apt-get -y -q remove ubiquity-frontend-kde &> /dev/null
         until [ -e /usr/lib/ubiquity/ubiquity/frontend/gtk_ui.py ]; do
             echo && echo && echo "PRE-installing ubiquity-frontend-gtk..." && echo && echo
             sleep 2
             apt-get update
-            apt-get --quiet install  --yes  ubiquity-frontend-gtk
+            apt-get -y -q install ubiquity-frontend-gtk
         done
-        apt-get -y -q remove ubiquity-frontend-kde &> /dev/null
     fi
 
     # Check if they are using lightdm and if it is setup properly for the live default session
-    # [ "$(grep lightdm /etc/X11/default-display-manager)" != "" ] && [ ! -f /etc/lightdm/lightdm.conf ] && [ ! -f /usr/share/xsessions/ubuntu.desktop ] && echo "Lightdm not setup properly. You must set your default desktop with lightdm prior to remastering" &&  echo "Lightdm not setup properly. You must set your default desktop with lightdm prior to remastering" >> $WORKDIR/wasta-remastersys.log && exit 1
+    # [ "$(grep lightdm /etc/X11/default-display-manager)" != "" ] && [ ! -f /etc/lightdm/lightdm.conf ] && [ ! -f /usr/share/xsessions/ubuntu.desktop ] && log_msg "Lightdm not setup properly. You must set your default desktop with lightdm prior to remastering" && exit 1
 
     # prevent the installer from changing the apt sources.list
     if [ ! -f "/usr/share/ubiquity/apt-setup.save" ]; then
         cp /usr/share/ubiquity/apt-setup /usr/share/ubiquity/apt-setup.save
     fi
-    
-    # rik: not sure why, but this was below, moving here
-    rm -f /usr/share/ubiquity/apt-setup &> /dev/null
-    echo "# wasta-remastersys custom apt-setup" > /usr/share/ubiquity/apt-setup
-    echo >> /usr/share/ubiquity/apt-setup    
-    echo "# we don't run /usr/lib/ubiquity/apt-setup scripts" >> /usr/share/ubiquity/apt-setup
-    echo "# instead just use source system sources.list" >> /usr/share/ubiquity/apt-setup
-    echo >> /usr/share/ubiquity/apt-setup    
-    echo "# original apt-setup saved to apt-setup.save" >> /usr/share/ubiquity/apt-setup 
-    echo >> /usr/share/ubiquity/apt-setup    
-        
-    # rik: below is from PinguyBuilder
-    echo "mkdir -p /target/boot/efi" >> /usr/share/ubiquity/apt-setup
-    echo "touch /target/boot/efi/startup.nsh" >> /usr/share/ubiquity/apt-setup
-    echo 'echo "fs0:\EFI\ubuntu\grubx64.efi" >> /target/boot/efi/startup.nsh' >> /usr/share/ubiquity/apt-setup
-    echo "rm -f /target/etc/gdm/custom.conf" >> /usr/share/ubiquity/apt-setup
-    echo "rm -f /target/etc/mdm/mdm.conf" >> /usr/share/ubiquity/apt-setup
-    echo "sed -i '/cdrom:/d' /target/etc/apt/sources.list" >> /usr/share/ubiquity/apt-setup   
-    # rik: end from PinguyBuilder
+
+    cat > /usr/share/ubiquity/apt-setup <<FOO
+# wasta-remastersys custom apt-setup
+# we don't run /usr/lib/ubiquity/apt-setup scripts
+# instead just use source system sources.list
+
+# original apt-setup saved to apt-setup.save
+
+mkdir -p /target/boot/efi
+touch /target/boot/efi/startup.nsh
+echo "fs0:\EFI\ubuntu\grubx64.efi" >> /target/boot/efi/startup.nsh
+rm -f /target/etc/gdm/custom.conf
+rm -f /target/etc/mdm/mdm.conf
+sed -i '/cdrom:/d' /target/etc/apt/sources.list
+FOO
     chmod 755 /usr/share/ubiquity/apt-setup
 
     sleep 1
@@ -315,8 +309,8 @@ log_msg "$WORKDIR is on a $DIRTYPE filesystem"
         done
     fi
 
-    rsync --exclude='*.log.*' --exclude='*~' --exclude='*.pid' --exclude='*.bak' --exclude='*.[0-9].gz' --exclude='*.deb' --exclude='kdecache*' $VAREXCLUDES-a /var/. $WORKDIR/dummysys/var/.
-    rsync $VAREXCLUDES-a /etc/. $WORKDIR/dummysys/etc/.
+    rsync --exclude='*.log.*' --exclude='*~' --exclude='*.pid' --exclude='*.bak' --exclude='*.[0-9].gz' --exclude='*.deb' --exclude='kdecache*' $VAREXCLUDES -a /var/. $WORKDIR/dummysys/var/.
+    rsync $VAREXCLUDES -a /etc/. $WORKDIR/dummysys/etc/.
 
     #Adding packages location to sources
     ARCH=$(archdetect | awk -F "/" '{print $1}')
@@ -328,12 +322,12 @@ log_msg "$WORKDIR is on a $DIRTYPE filesystem"
 
     #Copying grub config
     cp /etc/default/grub $WORKDIR/dummysys/etc/default/grub
-    
+
     # rik: default to no grub boot menu, I think ubiquity is smart enough
     #   to modify to show again if other OSs are detected
     sed -i -e "s@.*\(GRUB_HIDDEN_TIMEOUT\)=.*@\1=0@" \
         $WORKDIR/dummysys/etc/default/grub
-    
+
     sed -i -e "s@.*\(GRUB_DISTRIBUTOR\)=.*@\1=\"$LIVECDLABEL\"@" \
         $WORKDIR/dummysys/etc/default/grub
 
@@ -356,11 +350,7 @@ log_msg "$WORKDIR is on a $DIRTYPE filesystem"
     rm -f $WORKDIR/dummysys/etc/ssh/*key*
     rm -f $WORKDIR/dummysys/var/lib/dbus/machine-id
     rsync -a /dev/urandom $WORKDIR/dummysys/dev/
-    # rik: below seems to be working fine for /var/log files on new system
-    #   if they are fully deleted and then created again here, they are owned
-    #   by root:root which isn't right.  Just remove and new sytem can create.
-    rm -rf $WORKDIR/dummysys/var/log/*
-    #find $WORKDIR/dummysys/var/log/ -type f -exec rm -f {} \;
+    find $WORKDIR/dummysys/var/log/ -type f -exec rm -f {} \;
     find $WORKDIR/dummysys/var/lock/ -type f -exec rm -f {} \;
     find $WORKDIR/dummysys/var/backups/ -type f -exec rm -f {} \;
     find $WORKDIR/dummysys/var/tmp/ -type f -exec rm -f {} \;
@@ -392,21 +382,26 @@ log_msg "$WORKDIR is on a $DIRTYPE filesystem"
         sed -i "s/LIVEUSER/$LIVEUSER/g" $WORKDIR/dummysys/etc/mdm/mdm.conf
         chmod +x $WORKDIR/dummysys/etc/mdm/mdm.conf
         chmod 755 $WORKDIR/dummysys/etc/mdm/mdm.conf
+
+        find $WORKDIR/dummysys/var/mail/ -type f -exec rm -f {} \;
+        SPOOL_KEEP=""
+        #preserve libreoffice extensions
+        SPOOL_KEEP="${SPOOL_KEEP} -path $WORKDIR/dummysys/var/spool/libreoffice -prune "
+        #preserve critical "at" file
+        SPOOL_KEEP="${SPOOL_KEEP} ! -wholename $WORKDIR/dummysys/var/spool/cron/atjobs/.SEQ "
+        find $WORKDIR/dummysys/var/spool/ -type f ${SPOOL_KEEP} -exec rm -f {} \;
         if [ ! -d /run ]; then
-		find $WORKDIR/dummysys/var/run/ $WORKDIR/dummysys/var/mail/ $WORKDIR/dummysys/var/spool/ -type f -exec rm -f {} \;
-		# put back /var/spool/libreoffice (extensions stored here)
-		rsync /var/spool/libreoffice/ $WORKDIR/dummysys/var/spool/libreoffice/ -r -t
-	else
-		find $WORKDIR/dummysys/var/mail/ $WORKDIR/dummysys/var/spool/ -type f -exec rm -f {} \;
-		# put back /var/spool/libreoffice (extensions stored here)
-		rsync /var/spool/libreoffice/ $WORKDIR/dummysys/var/spool/libreoffice/ -r -t
-		unlink $WORKDIR/dummysys/var/run
-		cd $WORKDIR/dummysys/var
-		ln -sf ../run run
-	fi
-        # rik: above seems to be working fine for /var/log files on new system
-        #   if they are fully deleted and then created again here, they are owned
-        #   by root:root which isn't right.  Just remove and new sytem can create.
+            find $WORKDIR/dummysys/var/run/ -type f -exec rm -f {} \;
+        else
+            unlink $WORKDIR/dummysys/var/run
+            cd $WORKDIR/dummysys/var
+            ln -sf ../run run
+        fi
+
+        # rik: creating empty placeholder files this way has proved problematic.
+        #   The files are owned by root:root which isn't right. 
+        #   They all seem to autocreate just fine, so unsure why the original
+        #   author thought it necessary to create these placeholder files.
         # for i in dpkg.log lastlog mail.log syslog auth.log daemon.log faillog lpr.log mail.warn user.log boot debug mail.err messages wtmp bootstrap.log dmesg kern.log mail.info
         #do
         #    touch $WORKDIR/dummysys/var/log/${i}
@@ -459,7 +454,7 @@ log_msg "$WORKDIR is on a $DIRTYPE filesystem"
     # make sure the adduser and autologin functions of casper as set according to the mode
     log_msg "Making sure adduser and autologin functions of casper are set properly"
     [ "$1" = "dist" ] && [ ! -d $WORKDIR/dummysys/home ] && mkdir $WORKDIR/dummysys/home
-    [ "$1" = "dist" ] && chmod 755 /usr/share/initramfs-tools/scripts/casper-bottom/*adduser /usr/share/initramfs-tools/scripts/casper-bottom/*autologin 
+    [ "$1" = "dist" ] && chmod 755 /usr/share/initramfs-tools/scripts/casper-bottom/*adduser /usr/share/initramfs-tools/scripts/casper-bottom/*autologin
     [ "$1" = "backup" ] && [ -d $WORKDIR/dummysys/home ] && rm -rf $WORKDIR/dummysys/home
     [ "$1" = "backup" ] && chmod 644 /usr/share/initramfs-tools/scripts/casper-bottom/*adduser /usr/share/initramfs-tools/scripts/casper-bottom/*autologin
 
@@ -484,7 +479,7 @@ log_msg "$WORKDIR is on a $DIRTYPE filesystem"
     log_msg "Downloading packages for CD"
     mkdir -p $WORKDIR/ISOTMP/pool
     cd $WORKDIR/ISOTMP/pool
-    
+
     apt-get download -q \
         b43-fwcutter \
         bcmwl-kernel-source \
@@ -500,12 +495,12 @@ log_msg "$WORKDIR is on a $DIRTYPE filesystem"
         grub2-common \
         secureboot-db \
         shim shim-signed
-    
+
     mkdir -p $WORKDIR/ISOTMP/dists
     cd $WORKDIR/ISOTMP/
     dpkg-scanpackages pool &> /dev/null | gzip -9c > dists/Packages.gz
 
-    # check and see if they have a custom isolinux already setup. eg. they copied over 
+    # check and see if they have a custom isolinux already setup. eg. they copied over
     # the isolinux folder from their original livecd or made a custom one for their distro
 
     if [ ! -f /etc/wasta-remastersys/customisolinux/isolinux.cfg ]; then
@@ -513,7 +508,7 @@ log_msg "$WORKDIR is on a $DIRTYPE filesystem"
         find /usr -name 'isolinux.bin' -exec cp {} $WORKDIR/ISOTMP/isolinux/ \;
         #find fix for vesamenu.32 provided by Krasimir S. Stefanov <lokiisyourmaster@gmail.com>
         VESAMENU=$(find /usr -print0 | grep -FzZ "bios/vesamenu.c32")
-        cp $VESAMENU $WORKDIR/ISOTMP/isolinux/ 
+        cp $VESAMENU $WORKDIR/ISOTMP/isolinux/
         LDLINUX=$(find /usr -print0 | grep -FzZ "bios/ldlinux.c32")
         cp $LDLINUX $WORKDIR/ISOTMP/isolinux/
         LIBUTIL=$(find /usr -print0 | grep -FzZ "bios/libutil.c32")
@@ -530,7 +525,6 @@ log_msg "$WORKDIR is on a $DIRTYPE filesystem"
     else
         log_msg "Copying your custom isolinux setup to the live system"
         cp /etc/wasta-remastersys/customisolinux/* $WORKDIR/ISOTMP/isolinux/ &> /dev/null
-
     fi
 
     log_msg "Checking the ARCH of the system and setting the README.diskdefines file"
@@ -669,7 +663,7 @@ FOO
     log_msg "Creating filesystem.squashfs   ... this will take a while so be patient"
 
     REALFOLDERS=""
-    
+
     # Includes Addition
     for d in $INCLUDES;
     do
@@ -763,7 +757,7 @@ FOO
 
     sleep 1
 
-    #checking the size of the compressed filesystem to ensure it meets the iso9660 spec for a single file" 
+    #checking the size of the compressed filesystem to ensure it meets the iso9660 spec for a single file"
     SQUASHFSSIZE=$(ls -s $WORKDIR/ISOTMP/casper/filesystem.squashfs | awk -F " " '{print $1}')
     if [ "$SQUASHFSSIZE" -gt "3999999" ]; then
         log_msg "The compressed filesystem is larger than genisoimage allows for a single file. You must try to reduce the amount of data you are backing up and try again."
@@ -836,7 +830,7 @@ iso (){
         log_msg "The iso was not created. There was a problem. Exiting"
         exit 1
     fi
-    
+
     # Make the iso hybrid so it can be simply dd copied to a usb flash drive.
     log_msg "Making $CUSTOMISO a hybrid iso"
     isohybrid --uefi $WORKDIR/$CUSTOMISO
@@ -858,16 +852,6 @@ iso (){
 }
 
 # check to see if either iso or cdfs options have been invoked and proceed accordingly
-
-# Replaced this with a CASE statement, below
-#~ if [ "$2" = "iso" ]; then
-    #~ iso $@
-#~ elif [ "$2" = "cdfs" ]; then
-    #~ cdfs $@
-#~ else
-    #~ cdfs $@
-    #~ iso $@
-#~ fi
 
 case $2 in
     iso )
