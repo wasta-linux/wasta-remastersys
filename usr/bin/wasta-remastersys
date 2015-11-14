@@ -526,17 +526,36 @@ FOO
     if [ ! -f /etc/wasta-remastersys/customisolinux/isolinux.cfg ]; then
         log_msg "Creating isolinux setup for the live system"
         find /usr -name 'isolinux.bin' -exec cp {} $WORKDIR/ISOTMP/isolinux/ \;
-        #find fix for vesamenu.32 provided by Krasimir S. Stefanov <lokiisyourmaster@gmail.com>
-        VESAMENU=$(find /usr -print0 | grep -FzZ "bios/vesamenu.c32")
-        cp $VESAMENU $WORKDIR/ISOTMP/isolinux/
-        LDLINUX=$(find /usr -print0 | grep -FzZ "bios/ldlinux.c32")
-        cp $LDLINUX $WORKDIR/ISOTMP/isolinux/
-        LIBUTIL=$(find /usr -print0 | grep -FzZ "bios/libutil.c32")
-        cp $LIBUTIL $WORKDIR/ISOTMP/isolinux/
-        LIBCOM=$(find /usr -print0 | grep -FzZ "bios/libcom32.c32")
-        cp $LIBCOM $WORKDIR/ISOTMP/isolinux/
-        MENU=$(find /usr -print0 | grep -FzZ "bios/menu.c32")
-        cp $MENU $WORKDIR/ISOTMP/isolinux/
+        VESAMENU=$(find /usr -print0 | grep -EzZ --max-count=1 "bios/vesamenu.c32|syslinux/vesamenu.c32")
+        if [ -z "$VESAMENU" ]; then
+            log_msg "   unable to find vesamenu.c32 - skipping"
+        else
+            cp $VESAMENU $WORKDIR/ISOTMP/isolinux/ 
+        fi
+        LDLINUX=$(find /usr -print0 | grep -EzZ --max-count=1 "bios/ldlinux.c32|syslinux/ldlinux.c32")
+        if [ -z "$LDLINUX" ]; then
+            log_msg "   unable to find ldlinux.c32 - skipping"
+        else
+            cp $LDLINUX $WORKDIR/ISOTMP/isolinux/
+        fi
+        LIBUTIL=$(find /usr -print0 | grep -EzZ --max-count=1 "bios/libutil.c32|syslinux/libutil.c32")
+        if [ -z "$LIBUTIL" ]; then
+            log_msg "   unable to find libutil.c32 - skipping"
+        else
+            cp $LIBUTIL $WORKDIR/ISOTMP/isolinux/
+        fi
+        LIBCOM=$(find /usr -print0 | grep -EzZ --max-count=1 "bios/libcom32.c32|syslinux/libcom32.c32")
+        if [ -z "$LIBCOM" ]; then
+            log_msg "   unable to find libcom32.c32 - skipping"
+        else
+            cp $LIBCOM $WORKDIR/ISOTMP/isolinux/
+        fi
+        MENU=$(find /usr -print0 | grep -EzZ --max-count=1 "bios/menu.c32|syslinux/menu.c32")
+        if [ -z "$MENU" ]; then
+            log_msg "   unable to find menu.c32 - skipping"
+        else
+            cp $MENU $WORKDIR/ISOTMP/isolinux/
+        fi
         # setup isolinux for the livecd
         VERSION=$(lsb_release -r | awk '{print $2}' | awk -F "." '{print $1}')
         sed -e 's/__LIVECDLABEL__/'"$LIVECDLABEL"'/g' /etc/wasta-remastersys/isolinux/isolinux.cfg.vesamenu > \
