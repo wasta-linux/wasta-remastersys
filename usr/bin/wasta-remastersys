@@ -513,10 +513,8 @@ FOO
 
     #virtualbox creates a user with id 999 which conflicts with casper's default
     #  causing login to fail
-    if [ "$(getent passwd 999)" = "" ]; then
-        log_msg "   good: userID 999 is unused - no need to adjust anything"
-    elif [ "$(getent passwd 990)" = "" ]; then
-        log_msg "   good: userID 990 is unused - adjusting LIVECD user to use that"
+    if [ "$(getent passwd 999)" != "" ] && [ "$(getent passwd 990)" = "" ]; then
+        log_msg "   avoiding conflict with uid 999.  Using uid 990..."
         sed -i -e 's@user-uid 999@user-uid 990@' \
             /usr/share/initramfs-tools/scripts/casper-bottom/*adduser
     else
@@ -925,6 +923,8 @@ iso (){
     ALT_BOOT=""
     if [ -e boot/grub/efi.img ]; then
         ALT_BOOT="-eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot"
+    else
+        log_msg "   Warning: boot/grub/efi.img is missing!! Skipping EFI boot."
     fi
     $CREATEISO -iso-level 3 -quiet -r -V "$LIVECDLABEL" -cache-inodes -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table ${ALT_BOOT} -o $WORKDIR/$CUSTOMISO $WORKDIR/ISOTMP &>>$WORKDIR/"${BRAND_LOG}"
 
