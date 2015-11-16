@@ -63,19 +63,16 @@ do_start() {
         sed -i -e 's/root:x:/root:!:/g' /etc/shadow
         rm -rf /home/*/Desktop/ubiquity*.desktop
 
-        # ${BRAND_NAME} additions
-        # NeoRouter: clear any config
+        # NeoRouter: clear config
         rm -f /usr/local/ZebraNetworkSystems/NeoRouter/Client.xml &> /dev/null
+        # TeamViewer: clear config (added by PinguyBuilder)
+        rm -f /opt/teamviewer/config/global.conf &> /dev/null
         #boot-repair: only removed if added by ${BRAND_BIN}.
         apt-get remove -y -q boot-repair &> /dev/null
         #recreate SSH keys
-        if [ "$(dpkg-query -W --showformat='${Status}\n' openssh-server 2> /dev/null|grep 'install ok installed')" ]; then
-            dpkg-reconfigure openssh-server &> /dev/null
-        fi
+        dpkg-reconfigure openssh-server &> /dev/null
         #ensure all required 'at' files exist with proper file permission
-        if [ "$(dpkg-query -W --showformat='${Status}\n' at 2> /dev/null|grep 'install ok installed')" ]; then
-            dpkg-reconfigure at &> /dev/null
-        fi
+        dpkg-reconfigure at &> /dev/null
 
         #Place your custom commands below this line
 
