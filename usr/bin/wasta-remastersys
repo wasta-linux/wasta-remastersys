@@ -922,7 +922,12 @@ iso (){
 
     # Step 8 - Make the ISO file
     log_msg "Creating $CUSTOMISO in $WORKDIR"
-    $CREATEISO -iso-level 3 -quiet -r -V "$LIVECDLABEL" -cache-inodes -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -o $WORKDIR/$CUSTOMISO $WORKDIR/ISOTMP &>>$WORKDIR/"${BRAND_LOG}"
+    ALT_BOOT=""
+    if [ -e boot/grub/efi.img ]; then
+        ALT_BOOT="-eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot"
+    fi
+    $CREATEISO -iso-level 3 -quiet -r -V "$LIVECDLABEL" -cache-inodes -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table ${ALT_BOOT} -o $WORKDIR/$CUSTOMISO $WORKDIR/ISOTMP &>>$WORKDIR/"${BRAND_LOG}"
+
     if [ ! -f $WORKDIR/$CUSTOMISO ]; then
         log_msg "The iso was not created. There was a problem. Exiting"
         exit 1
