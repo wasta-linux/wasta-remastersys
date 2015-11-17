@@ -1,4 +1,4 @@
-wasta-remastersys (4.4.1.6) precise; urgency=low
+wasta-remastersys (4.4.1.7) precise; urgency=low
 
   * allow for easier rebranding
   * re-instated ability to work with Ubuntu 12.04 / 14.04 variants
@@ -9,6 +9,7 @@ wasta-remastersys (4.4.1.6) precise; urgency=low
   * add Pinguy's teamviewer config removal to firstboot
   * consolidate PinguyBuilder, BodhiBuilder, and Respin changes
   * adjust the ubiquity installer label
+  * remove unnecessary dependencies
 
  -- Justin Luth <jluth@mail.com>  Sat, 14 Nov 2015 13:32:00 +0300
 
