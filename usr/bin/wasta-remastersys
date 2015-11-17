@@ -304,7 +304,7 @@ cdfs (){
     if [ "$(grep lightdm /etc/X11/default-display-manager)" != "" ]; then
         if [ ! -f /etc/lightdm/lightdm.conf ]; then
             if [ ! -f /usr/share/xsessions/ubuntu.desktop ] \
-            || [ ! -f /usr/share/xsessions/enlightenment.desktop ]; then
+            && [ ! -f /usr/share/xsessions/enlightenment.desktop ]; then
                 log_msg "Lightdm not setup properly. You must set your default desktop with lightdm prior to remastering"
                 exit 1
             fi
