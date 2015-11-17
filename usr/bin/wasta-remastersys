@@ -149,7 +149,7 @@ log_msg() {
 }
 
 if [ "$LIVECDLABEL" = "" ]; then
-    LIVECDLABEL="Custom Live CD"
+    LIVECDLABEL="Custom-Live-CD"
 fi
 
 CDBOOTTYPE="ISOLINUX"
@@ -376,6 +376,7 @@ FOO
 
     #Adding packages location to sources
     DISKINFONAME=$(echo $LIVECDLABEL | awk '{print $1}')
+    DISTRIB_RELEASE=$(echo $LIVECDLABEL | awk '{print $2}')
     log_msg "Adding CD-ROM to source list"
     . /etc/lsb-release
     sed -i '/cdrom:/d' $WORKDIR/dummysys/etc/apt/sources.list &> /dev/null
@@ -942,7 +943,6 @@ iso (){
     touch $WORKDIR/ISOTMP/.disk/base_installable
     echo "full_cd/single" > $WORKDIR/ISOTMP/.disk/cd_type
     # starting with 12.04 need to have correct ubuntu version or startup disk creator uses syslinux-legacy which won't work
-    DISKINFONAME=$(echo $LIVECDLABEL | awk '{print $1}')
     echo $DISKINFONAME $DISTRIB_RELEASE - Release $ARCH > $WORKDIR/ISOTMP/.disk/info
     echo $LIVECDURL > $WORKDIR/ISOTMP/.disk/release_notes_url
 
