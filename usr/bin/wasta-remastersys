@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# remastersys script to make an installable livecd/dvd from an
-#   (XK)Ubuntu installed and customized system
+# remastersys script to make an installable livecd/dvd from a
+#   customized Ubuntu-based system
 #
 #
 #  Originally created by Tony "Fragadelic" Brijeski
@@ -12,9 +12,12 @@
 #
 #
 #  This version was tested on variants of Ubuntu's Precise 12.04 and up
-#     confirmed on Cinnamon Mint Maya 13, Precise 12.04(pending reverification)
-#     confirmed on Cinnamon Mint 17.x,    Trusty  14.04(pending reverification)
-#     confirmed on                        Wily    15.10(pending reverification)
+#     confirmed on Cinnamon Mint Maya 13  (based on 12.04)
+#     confirmed on Cinnamon Mint 17.x,    Trusty 14.04
+#     confirmed on                        Wily   15.10(pending reverification)
+#
+#Notes: -Ubuntu Precise-installer crashes with error near end.  unsupported.
+#       -Ubuntu Precise and Trusty-need "apt-get install ubiquity-slideshow"
 
 BRANDING="wasta-remastersys"
 BRAND_NAME="${BRANDING}"
@@ -34,6 +37,9 @@ if [ "$(whoami)" != "root" ]; then
     echo "Need to be root or run with sudo. Exiting."
     exit 1
 fi
+
+# Variables
+ARCH=$(archdetect | awk -F "/" '{print $1}')
 
 #create ${BRAND_INIT}-firstboot script if it doesn't exist and populate with at least removal of the ubiquity*.desktop file from users Desktop and fix for recovery mode
 fbtest=$(grep "#REM441" /etc/init.d/"${BRAND_INIT}-firstboot")
@@ -297,11 +303,15 @@ cdfs (){
     # Check using lightdm and if it is setup properly for a live default session
     if [ "$(grep lightdm /etc/X11/default-display-manager)" != "" ]; then
         if [ ! -f /etc/lightdm/lightdm.conf ]; then
-            [ ! -f /usr/share/xsessions/ubuntu.desktop ] && log_msg "Lightdm not setup properly. You must set your default desktop with lightdm prior to remastering" && exit 1
+            if [ ! -f /usr/share/xsessions/ubuntu.desktop ] \
+            || [ ! -f /usr/share/xsessions/enlightenment.desktop ]; then
+                log_msg "Lightdm not setup properly. You must set your default desktop with lightdm prior to remastering"
+                exit 1
+            fi
         else
             AUTOLOGIN=$(grep -s '^autologin-user=' /etc/lightdm/lightdm.conf | awk -F= '{print $2}')
             if [ "${AUTOLOGIN}" ] && [ "${AUTOLOGIN}" != "${LIVEUSER}" ]; then
-              echo && echo 
+              echo && echo
               log_msg "WARNING: LIVEUSER already defined in /etc/lightdm/lightdm.conf."
               log_msg "         No autologin until ${LIVEUSER} = ${AUTOLOGIN}"
               echo && echo
@@ -365,7 +375,6 @@ FOO
     rsync $VAREXCLUDES -a /etc/. $WORKDIR/dummysys/etc/.
 
     #Adding packages location to sources
-    ARCH=$(archdetect | awk -F "/" '{print $1}')
     DISKINFONAME=$(echo $LIVECDLABEL | awk '{print $1}')
     log_msg "Adding CD-ROM to source list"
     . /etc/lsb-release
@@ -393,6 +402,7 @@ FOO
     rm -rf $WORKDIR/dummysys/var/lib/ureadahead/pack &> /dev/null
     rm -f $WORKDIR/dummysys/var/lib/update-notifier/user.d/* &> /dev/null
     rm -f $WORKDIR/dummysys/etc/X11/xorg.conf*
+#    rm -f $WORKDIR/dummysys/etc/ timezone
     rm -f $WORKDIR/dummysys/etc/{hosts,hostname,mtab*,fstab}
     if [ ! -L $WORKDIR/dummysys/etc/resolv.conf ]; then
         rm -f $WORKDIR/dummysys/etc/resolv.conf
@@ -616,8 +626,7 @@ FOO
         cp /etc/"${BRAND_ETC}"/customisolinux/* $WORKDIR/ISOTMP/isolinux/ &> /dev/null
     fi
 
-    log_msg "Checking the ARCH of the system and setting the README.diskdefines file"
-    ARCH=$(archdetect | awk -F "/" '{print $1}')
+    log_msg "Setting the README.diskdefines file to use ARCH $ARCH"
 
     cat > $WORKDIR/ISOTMP/README.diskdefines <<FOO
 #define DISKNAME  $LIVECDLABEL
@@ -648,7 +657,7 @@ FOO
 
     if [ "$1" = "backup" ]; then
         BACKUPEXCLUDES=""
-        log_msg "Excluding folder from the backup that will cause issues"
+        log_msg "Excluding folders from the backup that will cause issues"
 
         for bi in $(ls /home); do
             if [ -d /home/$bi/.gvfs ]; then
@@ -682,7 +691,7 @@ FOO
         if [ "$BACKUPSHOWINSTALL" = "1" ]; then
             # copy the install icon to the sudo users desktop
             log_msg "Copying the install icon to the desktop of $LIVEUSER"
-            UBIQUITYDESKTOP=$(find /usr -name ubiquity*.desktop)
+            UBIQUITYDESKTOP=$(find /usr -name ubiquity*.desktop | head -1)
             if [ "$UBIQUITYDESKTOP" ] ; then
                 install -d -o $LIVEUSER -g $LIVEUSER /$LIVEHOME/Desktop &> /dev/null
                 install -D -o $LIVEUSER -g $LIVEUSER $UBIQUITYDESKTOP /$LIVEHOME/Desktop/ &> /dev/null
@@ -744,6 +753,41 @@ FOO
         log_msg "Missing valid kernel. Exiting"
         exit 1
     fi
+
+###########  section from BOHDIBUILDER that may be useful for UEFI ##########
+#    # first check to see if it's 64bit,
+#    # 64bit needs vmlinuz.efi
+#    case $ARCH in
+#        amd64 ) # 64bit needs vmlinuz.efi
+#            log_msg "Creating casper/vmlinuz.efi"
+#            cp -v /boot/vmlinuz-`uname -r` $WORKDIR/ISOTMP/casper/vmlinuz.efi
+#            sed -i 's/vmlinuz$/vmlinuz\.efi/g' $WORKDIR/ISOTMP/isolinux/isolinux.cfg
+#        ;;
+#        *) # everything else needs just vmlinuz
+#            log_msg "Creating casper/vmlinuz"
+#            cp -v /boot/vmlinuz-`uname -r` $WORKDIR/ISOTMP/casper/vmlinuz
+#            sed -i 's/vmlinuz\.efi$/vmlinuz/g' $WORKDIR/ISOTMP/isolinux/isolinux.cfg
+#        ;;
+#    esac
+#    # Copy initrd into casper
+#    cp -v /boot/initrd.img-`uname -r` $WORKDIR/ISOTMP/casper/initrd.lz
+#    
+#    ## See bohdibuilder code for process to create initrd.lz from initrd.img...
+#   
+#    #exit if missing... either vmlinuz or vmlinuz.efi
+#    if [ ! -f $WORKDIR/ISOTMP/casper/vmlinuz.efi ] ; then
+#        if [ ! -f $WORKDIR/ISOTMP/casper/vmlinuz ]; then
+#            log_msg "Missing valid kernel. Exiting"
+#            exit 1
+#        fi
+#    fi
+#    #exit if missing... initrd.lz
+#    if [ ! -f $WORKDIR/ISOTMP/casper/initrd.lz ]; then
+#        log_msg "Missing valid initial ramdisk. Exiting"
+#        exit 1
+#    fi
+###########  END section from BOHDIBUILDER #######
+
     if [ ! -f $WORKDIR/ISOTMP/casper/initrd.gz ]; then
         log_msg "Missing valid initial ramdisk. Exiting"
         exit 1
@@ -898,7 +942,6 @@ iso (){
     touch $WORKDIR/ISOTMP/ubuntu
     touch $WORKDIR/ISOTMP/.disk/base_installable
     echo "full_cd/single" > $WORKDIR/ISOTMP/.disk/cd_type
-    ARCH=$(archdetect | awk -F "/" '{print $1}')
     # starting with 12.04 need to have correct ubuntu version or startup disk creator uses syslinux-legacy which won't work
     DISKINFONAME=$(echo $LIVECDLABEL | awk '{print $1}')
     echo $DISKINFONAME $DISTRIB_RELEASE - Release $ARCH > $WORKDIR/ISOTMP/.disk/info
