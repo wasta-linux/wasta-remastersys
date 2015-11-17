@@ -696,9 +696,8 @@ FOO
                 install -d -o $LIVEUSER -g $LIVEUSER /$LIVEHOME/Desktop &> /dev/null
                 install -D -o $LIVEUSER -g $LIVEUSER $UBIQUITYDESKTOP /$LIVEHOME/Desktop/ &> /dev/null
                 #casper modifier used to change desktop installer name
-                #modifer in 12.04 = RELEASE,  14.04 = Name
                 sed -i \
-                    -e "s/ RELEASE | Name / $LIVECDLABEL /" \
+                    -e "s/RELEASE/$LIVECDLABEL/" \
                   "/$LIVEHOME/Desktop/$(basename $UBIQUITYDESKTOP)" &> /dev/null
             fi
         fi
