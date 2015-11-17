@@ -524,15 +524,18 @@ FOO
 
     #virtualbox creates a user with id 999 which conflicts with casper's default
     #  causing login to fail
-    if [ "$(getent passwd 999)" != "" ] && [ "$(getent passwd 990)" = "" ]; then
-        log_msg "   avoiding conflict with uid 999.  Using uid 990..."
-        sed -i -e 's@user-uid 999@user-uid 990@' \
-            /usr/share/initramfs-tools/scripts/casper-bottom/*adduser
-    else
-        echo && echo
-        log_msg "*  ERROR: problem finding a free userid. "
-        log_msg "*     Conflict with $(getent passwd 999 | awk -F: '{ print $1}')"
-        echo && echo
+    UID_999=$(getent passwd 999 | awk -F: '{ print $1}') 
+    if [ "${UID_999}" != "" ]; then
+        if [ "$(getent passwd 990)" = "" ]; then
+            log_msg "   avoiding conflict with ${UID_999}.  Using uid 990..."
+            sed -i -e 's@user-uid 999@user-uid 990@' \
+                /usr/share/initramfs-tools/scripts/casper-bottom/*adduser
+        else
+            echo && echo
+            log_msg "*  ERROR: problem finding a free userid. "
+            log_msg "*     Conflict with ${UID_999}"
+            echo && echo
+        fi
     fi
 
     # copy over some of the necessary stuff for the livecd
