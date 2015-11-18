@@ -302,13 +302,7 @@ cdfs (){
 
     # Check using lightdm and if it is setup properly for a live default session
     if [ "$(grep lightdm /etc/X11/default-display-manager)" != "" ]; then
-        if [ ! -f /etc/lightdm/lightdm.conf ]; then
-            if [ ! -f /usr/share/xsessions/ubuntu.desktop ] \
-            && [ ! -f /usr/share/xsessions/enlightenment.desktop ]; then
-                log_msg "Lightdm not setup properly. You must set your default desktop with lightdm prior to remastering"
-                exit 1
-            fi
-        else
+        if [ -f /etc/lightdm/lightdm.conf ]; then
             AUTOLOGIN=$(grep -s '^autologin-user=' /etc/lightdm/lightdm.conf | awk -F= '{print $2}')
             if [ "${AUTOLOGIN}" ] && [ "${AUTOLOGIN}" != "${LIVEUSER}" ]; then
               echo && echo
@@ -316,6 +310,14 @@ cdfs (){
               log_msg "         No autologin until ${LIVEUSER} = ${AUTOLOGIN}"
               echo && echo
             fi
+        #JCL: removing - no idea why this is here.  Shouldn't have any impact on 
+        #     live session, and lots of distributions have their own .desktop.
+        #else
+        #    if [ ! -f /usr/share/xsessions/ubuntu.desktop ] \
+        #    && [ ! -f /usr/share/xsessions/enlightenment.desktop ]; then
+        #        log_msg "Lightdm not setup properly. You must set your default desktop with lightdm prior to remastering"
+        #        exit 1
+        #    fi
         fi
     fi
 
