@@ -2,3 +2,5 @@ wasta-remastersys: arch-independent-package-contains-binary-or-object
 wasta-remastersys: unstripped-binary-or-object
 wasta-remastersys: depends-on-essential-package-without-using-version
 wasta-remastersys: depends-on-obsolete-package
+wasta-remastersys: binary-without-manpage usr/bin/wasta-remastersys-skelcopy
+

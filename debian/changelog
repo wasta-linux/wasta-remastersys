@@ -1,4 +1,4 @@
-wasta-remastersys (4.4.1.7) precise; urgency=low
+wasta-remastersys (4.4.1.8) precise; urgency=low
 
   * allow for easier rebranding
   * re-instated ability to work with Ubuntu 12.04 / 14.04 variants
