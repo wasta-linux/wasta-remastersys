@@ -976,8 +976,11 @@ iso (){
     fi
 
     # Make the iso hybrid so it can be simply dd copied to a usb flash drive.
-    log_msg "Making $CUSTOMISO a hybrid iso"
-    isohybrid --uefi $WORKDIR/$CUSTOMISO
+    # disable hybrid iso (e.g Easy2Boot doesn't like them)
+    if [ "${HYBRIDISO,,}" != "false" ]; then
+        log_msg "Making $CUSTOMISO a hybrid iso"
+        isohybrid --uefi $WORKDIR/$CUSTOMISO
+    fi
 
     # create the md5 sum file so the user doesn't have to - this is good so the
     # iso file can later be tested to ensure it hasn't become corrupted
