@@ -1,4 +1,4 @@
-wasta-remastersys (4.4.1.8) precise; urgency=low
+wasta-remastersys (4.4.1.9) precise; urgency=low
 
   * allow for easier rebranding
   * re-instated ability to work with Ubuntu 12.04 / 14.04 variants
@@ -10,6 +10,7 @@ wasta-remastersys (4.4.1.8) precise; urgency=low
   * consolidate PinguyBuilder, BodhiBuilder, and Respin changes
   * adjust the ubiquity installer label
   * remove unnecessary dependencies
+  * add .conf variable to control if a hybrid ISO is created
 
  -- Justin Luth <jluth@mail.com>  Sat, 14 Nov 2015 13:32:00 +0300
 
