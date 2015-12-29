@@ -14,7 +14,7 @@
 #  This version was tested on variants of Ubuntu's Precise 12.04 and up
 #     confirmed on Cinnamon Mint Maya 13  (based on 12.04)
 #     confirmed on Cinnamon Mint 17.x,    Trusty 14.04
-#     confirmed on                        Xerial 16.04 pre-alpha
+#     confirmed on                        Xenial 16.04 pre-alpha
 #
 #Notes: -Ubuntu Precise-installer crashes with error near end.  unsupported.
 
@@ -41,7 +41,7 @@ fi
 ARCH=$(archdetect | awk -F "/" '{print $1}')
 
 #create ${BRAND_INIT}-firstboot script if it doesn't exist and populate with at least removal of the ubiquity*.desktop file from users Desktop and fix for recovery mode
-fbtest=$(grep "#REM441" /etc/init.d/"${BRAND_INIT}-firstboot")
+fbtest=$(grep "#REM442" /etc/init.d/"${BRAND_INIT}-firstboot")
 
 if [ "$fbtest" = "" ]; then
     cat > /etc/init.d/"${BRAND_INIT}-firstboot" <<FOO
@@ -61,7 +61,7 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:/usr/local/sbin
 . /lib/lsb/init-functions
 
 do_start() {
-    #REM441
+    #REM442
     if [ "\`cat /proc/cmdline | grep casper\`" = "" ]; then
         [ "\$VERBOSE" != no ] && log_begin_msg "Running ${BRAND_INIT}-firstboot"
         (sleep 60 && update-rc.d -f ${BRAND_INIT}-firstboot remove) &
@@ -74,6 +74,8 @@ do_start() {
         rm -f /opt/teamviewer/config/global.conf &> /dev/null
         #boot-repair: only removed if added by ${BRAND_BIN}.
         apt-get remove -y -q boot-repair &> /dev/null
+        #chntpw: only removed if added by ${BRAND_BIN}.
+        apt-get remove -y -q chntpw &> /dev/null
         #recreate SSH keys
         dpkg-reconfigure openssh-server &> /dev/null
         #ensure all required 'at' files exist with proper file permission
@@ -287,12 +289,26 @@ cdfs (){
         REMOVE_BOOT_REPAIR=""
         #do not remove on firstboot if already installed
         sed -i \
-            -e '\|apt-get .*remove.* boot-repair|d' \
+            -e '\|apt-get .*remove.* boot-repair |d' \
           /etc/init.d/"${BRAND_INIT}-firstboot"
     else
         log_msg "Adding Boot-Repair to LiveCD"
         REMOVE_BOOT_REPAIR=YES
         apt-get -y -q install boot-repair &> /dev/null
+    fi
+
+    #Installing chntpw if not already installed
+    if [ -x /usr/sbin/chntpw ];
+    then
+        REMOVE_CHNTPW=""
+        #do not remove on firstboot if already installed
+        sed -i \
+            -e '\|apt-get .*remove.* chntpw |d' \
+          /etc/init.d/"${BRAND_INIT}-firstboot"
+    else
+        log_msg "Adding CHNTPW to LiveCD"
+        REMOVE_CHNTPW=YES
+        apt-get -y -q install chntpw &> /dev/null
     fi
 
 
@@ -892,6 +908,13 @@ FOO
     then
         log_msg "Removing Boot-Repair: it was only installed for the Live System"
         apt-get -y -q remove boot-repair &> /dev/null
+    fi
+
+    #Remove CHNTPW if only installed here
+    if [ "$REMOVE_CHNTPW" == "YES" ];
+    then
+        log_msg "Removing CHNTPW: it was only installed for the Live System"
+        apt-get -y -q remove chntpw &> /dev/null
     fi
 
     sleep 1
