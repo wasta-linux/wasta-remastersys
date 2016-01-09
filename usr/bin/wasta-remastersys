@@ -297,6 +297,25 @@ cdfs (){
         log_msg "Adding Boot-Repair to LiveCD"
         REMOVE_BOOT_REPAIR=YES
         apt-get -y -q install boot-repair &> /dev/null
+#Commenting this section out because the user should not be prompted in
+#the middle of remastersys, and shouldn't add PPAs automatically.
+#boot-repair will silently fail to install if the package hasn't been made
+#available from some trusted source.
+#        KEYPRESS=Y
+#        until [ -x /usr/bin/boot-repair ] || [ "${KEYPRESS^^}" == "N" ]; do
+#            read -p "Add boot-repair PPA for LiveCD?  (Y/n)  "  KEYPRESS
+#            if [ "${KEYPRESS^^}" != "N" ]; then
+#                add-apt-repository --yes ppa:yannubuntu/boot-repair
+#                apt-get update
+#                apt-get --quiet install --yes boot-repair
+#                add-apt-repository --remove --yes ppa:yannubuntu/boot-repair
+#                #Mint's hack of add-apt-repository doesn't support --remove
+#                if [[ $? != 0 ]]; then
+#                    log_msg "NOTICE: boot-repair PPA forcibly removed."
+#                    rm -f /etc/apt/sources.list.d/yannubuntu-boot-repair-*.list
+#                fi
+#            fi
+#        done
     fi
 
     #Installing chntpw if not already installed
