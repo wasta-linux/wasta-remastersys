@@ -41,7 +41,9 @@ fi
 ARCH=$(archdetect | awk -F "/" '{print $1}')
 
 #create ${BRAND_INIT}-firstboot script if it doesn't exist and populate with at least removal of the ubiquity*.desktop file from users Desktop and fix for recovery mode
-fbtest=$(grep "#REM442" /etc/init.d/"${BRAND_INIT}-firstboot")
+fbtest=""
+[ -f /etc/init.d/"${BRAND_INIT}-firstboot" ] &&
+    fbtest=$(grep "#REM442" /etc/init.d/"${BRAND_INIT}-firstboot")
 
 if [ "$fbtest" = "" ]; then
     cat > /etc/init.d/"${BRAND_INIT}-firstboot" <<FOO
@@ -430,7 +432,8 @@ FOO
     find $WORKDIR/dummysys/var/lock/ -type f -exec rm -f {} \;
     find $WORKDIR/dummysys/var/backups/ -type f -exec rm -f {} \;
     find $WORKDIR/dummysys/var/tmp/ -type f -exec rm -f {} \;
-    find $WORKDIR/dummysys/var/crash/ -type f -exec rm -f {} \;
+    [ -d $WORKDIR/dummysys/var/crash/ ] &&
+        find $WORKDIR/dummysys/var/crash/ -type f -exec rm -f {} \;
     find $WORKDIR/dummysys/var/lib/ubiquity/ -type f -exec rm -f {} \;
 
     if [ "$1" = "dist" ]; then
@@ -449,16 +452,26 @@ FOO
         rm -rf $WORKDIR/dummysys/var/run/console/*
 
         rm -f $WORKDIR/dummysys/etc/gdm/gdm.conf-custom
-        #Setting up auto timed login for GDM3
-        cp -a /etc/"${BRAND_ETC}"/gdm $WORKDIR/dummysys/etc/
-        sed -i "s/LIVEUSER/$LIVEUSER/g" $WORKDIR/dummysys/etc/gdm/custom.conf
-        chmod +x $WORKDIR/dummysys/etc/gdm/custom.conf
-        chmod 755 $WORKDIR/dummysys/etc/gdm/custom.conf
-        #Setting up auto timed login for MDM
-        cp -a /etc/"${BRAND_ETC}"/mdm $WORKDIR/dummysys/etc/
-        sed -i "s/LIVEUSER/$LIVEUSER/g" $WORKDIR/dummysys/etc/mdm/mdm.conf
-        chmod +x $WORKDIR/dummysys/etc/mdm/mdm.conf
-        chmod 755 $WORKDIR/dummysys/etc/mdm/mdm.conf
+        if [ -d /etc/"${BRAND_ETC}"/gdm/ ]; then
+            #Setting up auto timed login of live user for GDM3
+            if [ -f /etc/gdm/custom.conf ]; then
+                log_msg "WARNING: removing your /etc/gdm/custom.conf to support LiveCD autologin"
+            fi
+            mkdir -p $WORKDIR/dummysys/etc/gdm
+            cp /etc/"${BRAND_ETC}"/gdm/custom.conf $WORKDIR/dummysys/etc/gdm
+            sed -i "s/LIVEUSER/$LIVEUSER/g" $WORKDIR/dummysys/etc/gdm/custom.conf
+            chmod 755 $WORKDIR/dummysys/etc/gdm/custom.conf
+        fi
+        if [ -d /etc/"${BRAND_ETC}"/mdm/ ]; then
+            #Setting up auto login of live user for MDM
+            if [ -f /etc/mdm/custom.conf ]; then
+               log_msg "WARNING: removing your /etc/mdm/mdm.conf to support LiveCD autologin"
+            fi
+            mkdir -p $WORKDIR/dummysys/etc/mdm
+            cp /etc/"${BRAND_ETC}"/mdm/mdm.conf $WORKDIR/dummysys/etc/mdm/mdm.conf
+            sed -i "s/LIVEUSER/$LIVEUSER/g" $WORKDIR/dummysys/etc/mdm/mdm.conf
+            chmod 755 $WORKDIR/dummysys/etc/mdm/mdm.conf
+        fi
 
         find $WORKDIR/dummysys/var/mail/ -type f -exec rm -f {} \;
         SPOOL_KEEP=""
