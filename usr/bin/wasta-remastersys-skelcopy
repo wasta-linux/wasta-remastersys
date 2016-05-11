@@ -66,9 +66,13 @@ if [ -d "$SKELFOLDER" ]; then
     [ -e /etc/skel/.kde/share/apps/ ] && rm -rf /etc/skel/.kde/share/apps/RecentDocuments/*
     [ -e /etc/skel/.gnome2/keyrings/ ] && for i in /etc/skel/.gnome2/keyrings/*; do rm $i; done
 
-    find /etc/skel/ | grep "$SKELUSER" | xargs rm -rf '{}'
     find /etc/skel/ -name "*socket*"   | xargs rm -rf '{}'
     find /etc/skel/ -name "*cache*"    | xargs rm -rf '{}'
+#Desperate measures to prevent sharing files containing private information
+#  about the source-user. 
+#DELETE any filename that even remotely matches the name of the source-user
+    find /etc/skel/ | grep "$SKELUSER" | xargs rm -rf '{}'
+#DELETE any file whose contents even remotely match the name of the source-user
     grep -Rl "$SKELUSER" /etc/skel     | xargs rm -rf '{}'
     chown -R root:root /etc/skel
 
