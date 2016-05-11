@@ -18,70 +18,58 @@ SKELFOLDER=`grep "^$SKELUSER:" /etc/passwd | awk -F ":" '{print $6}'`
 
 if [ -d "$SKELFOLDER" ]; then
     cd $SKELFOLDER
-    echo "Cleaning up /etc/skel of the files we will copy over"
-    rm -rf /etc/skel/.bacon
-    rm -rf /etc/skel/.xscreensaver
-    rm -rf /etc/skel/.gconf
-    rm -rf /etc/skel/.bashrc
-    rm -rf /etc/skel/.profile
-    rm -rf /etc/skel/.gconf
-    rm -rf /etc/skel/.gnome2
-    rm -rf /etc/skel/.config
-    rm -rf /etc/skel/.local
-    rm -rf /etc/skel/.icewm*
-    rm -rf /etc/skel/.fvwm*
-    rm -rf /etc/skel/.afterstep*
-    rm -rf /etc/skel/.gtkrc*
-    rm -rf /etc/skel/.mate*
-    rm -rf /etc/skel/.pekwm*
-    rm -rf /etc/skel/.qt*
-    rm -rf /etc/skel/.kde*
-    rm -rf /etc/skel/.razor
-    rm -rf /etc/skel/.wbar
-    rm -rf /etc/skel/.mplayer
+
     echo "Copying config files to /etc/skel"
-    rsync -a .bacon /etc/skel/
-    rsync -a .xscreensaver /etc/skel
-    sed -i -e "s/$SKELUSER//g" /etc/skel/.xscreensaver
-    rsync -a .gconf /etc/skel/
-    rsync -a .bashrc /etc/skel/
-    rsync -a .profile /etc/skel/
-    rsync -a .gnome2 /etc/skel/
-    rsync -a .config /etc/skel/
-    rsync -a .local /etc/skel/
-    rsync -a .icewm* /etc/skel/
-    rsync -a .fvwm* /etc/skel/
-    rsync -a .afterstep* /etc/skel/
-    rsync -a .mate* /etc/skel/
-    rsync -a .gtkrc* /etc/skel/
-    rsync -a .qt* /etc/skel/
-    rsync -a .kde* /etc/skel/
-    rsync -a .pekwm /etc/skel/
-    rsync -a .razor /etc/skel/
-    rsync -a .wbar /etc/skel/
-    rsync -a .mplayer /etc/skel/
-    rm -rf /etc/skel/.config/chromium
-    rm -rf /etc/skel/.config/midori/cookies.*
-    rm -rf /etc/skel/.config/midori/history.*
-    rm -rf /etc/skel/.config/midori/tabtrash.*
-    rm -rf /etc/skel/.config/midori/running*
-    rm -rf /etc/skel/.config/midori/bookmarks.*
-    rm -rf /etc/skel/.config/user-dirs.*
-    rm -rf /etc/skel/.gconf/system/networking
-    rm -rf /etc/skel/.local/gvfs-metadata
-    rm -rf /etc/skel/.local/share/gvfs-metadata
-    rm -rf /etc/skel/.local/share/applications/wine-*
-    rm -rf /etc/skel/.local/share/Trash
-    rm -rf /etc/skel/.local/share/akonadi
-    rm -rf /etc/skel/.local/share/webkit
-    rm -rf /etc/skel/.kde/share/apps/klipper
-    rm -rf /etc/skel/.kde/share/apps/nepomuk
-    rm -rf /etc/skel/.kde/share/apps/RecentDocuments/*
-    for i in /etc/skel/.gnome2/keyrings/*; do rm $i; done
+    [ -e .xscreensaver ] && rsync -a --delete .xscreensaver /etc/skel
+    [ -e .xscreensaver ] && sed -i -e "s/$SKELUSER//g" /etc/skel/.xscreensaver
+    [ -e .bacon ] &&        rsync -a --delete .bacon /etc/skel/
+    [ -e .bashrc ] &&       rsync -a --delete .bashrc /etc/skel/
+    [ -e .config ] &&       rsync -a --delete .config /etc/skel/
+    [ -e .dmrc ] &&         rsync -a --delete .dmrc /etc/skel/
+    [ -e .fontconfig ] &&   rsync -a --delete .fontconfig /etc/skel/
+    [ -e .gconf ] &&        rsync -a --delete .gconf /etc/skel/
+    [ -e .gnome2 ] &&       rsync -a --delete .gnome2 /etc/skel/
+    [ -e .local ] &&        rsync -a --delete .local /etc/skel/
+    [ -e .mplayer ] &&      rsync -a --delete .mplayer /etc/skel/
+    [ -e .profile ] &&      rsync -a --delete .profile /etc/skel/
+    [ -e .themes ] &&       rsync -a --delete .themes /etc/skel/
+    [ -e .xinput.d ] &&     rsync -a --delete .xinput.d /etc/skel/
+    [ -e .afterstep* ] &&   rsync -a --delete .afterstep* /etc/skel/
+    [ -e .cinnamon* ] &&    rsync -a --delete .cinnamon* /etc/skel/
+    [ -e .fvwm* ] &&        rsync -a --delete .fvwm* /etc/skel/
+    [ -e .gtkrc* ] &&       rsync -a --delete .gtkrc* /etc/skel/
+    [ -e .icewm* ] &&       rsync -a --delete .icewm* /etc/skel/
+    [ -e .kde* ] &&         rsync -a --delete .kde* /etc/skel/
+    [ -e .mate* ] &&        rsync -a --delete .mate* /etc/skel/
+    [ -e .pekwm ] &&        rsync -a --delete .pekwm /etc/skel/
+    [ -e .qt* ] &&          rsync -a --delete .qt* /etc/skel/
+    [ -e .razor ] &&        rsync -a --delete .razor /etc/skel/
+    [ -e .wbar ] &&         rsync -a --delete .wbar /etc/skel/
+
+    [ -e /etc/skel/.config/chromium ] && rm -rf /etc/skel/.config/chromium
+    [ -e /etc/skel/.config/midori ] &&   rm -rf /etc/skel/.config/midori/cookies.*
+    [ -e /etc/skel/.config/midori ] &&   rm -rf /etc/skel/.config/midori/history.*
+    [ -e /etc/skel/.config/midori ] &&   rm -rf /etc/skel/.config/midori/tabtrash.*
+    [ -e /etc/skel/.config/midori ] &&   rm -rf /etc/skel/.config/midori/running*
+    [ -e /etc/skel/.config/midori ] &&   rm -rf /etc/skel/.config/midori/bookmarks.*
+    [ -e /etc/skel/.config/ ] &&         rm -rf /etc/skel/.config/user-dirs.*
+    [ -e /etc/skel/.gconf/system/ ] &&   rm -rf /etc/skel/.gconf/system/networking
+    [ -e /etc/skel/.local/gvfs-metadata ] && rm -rf /etc/skel/.local/gvfs-metadata
+    [ -e /etc/skel/.local/share/gvfs-metadata ] && rm -rf /etc/skel/.local/share/gvfs-metadata
+    [ -e /etc/skel/.local/share/applications/ ] && rm -rf /etc/skel/.local/share/applications/wine-*
+    [ -e /etc/skel/.local/share/ ] &&    rm -rf /etc/skel/.local/share/Trash
+    [ -e /etc/skel/.local/share/ ] &&    rm -rf /etc/skel/.local/share/akonadi
+    [ -e /etc/skel/.local/share/ ] &&    rm -rf /etc/skel/.local/share/webkit
+    [ -e /etc/skel/.local/share/ ] &&    rm -rf /etc/skel/.local/share/keyrings
+    [ -e /etc/skel/.kde/share/apps/ ] && rm -rf /etc/skel/.kde/share/apps/klipper
+    [ -e /etc/skel/.kde/share/apps/ ] && rm -rf /etc/skel/.kde/share/apps/nepomuk
+    [ -e /etc/skel/.kde/share/apps/ ] && rm -rf /etc/skel/.kde/share/apps/RecentDocuments/*
+    [ -e /etc/skel/.gnome2/keyrings/ ] && for i in /etc/skel/.gnome2/keyrings/*; do rm $i; done
+
     find /etc/skel/ | grep "$SKELUSER" | xargs rm -rf '{}'
-    find /etc/skel/ -name "*socket*" | xargs rm -rf '{}'
-    find /etc/skel/ -name "*cache*" | xargs rm -rf '{}'
-    grep -Rl "$SKELUSER" /etc/skel | xargs rm -rf '{}'
+    find /etc/skel/ -name "*socket*"   | xargs rm -rf '{}'
+    find /etc/skel/ -name "*cache*"    | xargs rm -rf '{}'
+    grep -Rl "$SKELUSER" /etc/skel     | xargs rm -rf '{}'
     chown -R root:root /etc/skel
 
 else
