@@ -14,7 +14,7 @@
 #  This version was tested on variants of Ubuntu's Precise 12.04 and up
 #     confirmed on Cinnamon Mint Maya 13  (based on 12.04)
 #     confirmed on Cinnamon Mint 17.x,    Trusty 14.04
-#     confirmed on                        Xenial 16.04 pre-alpha
+#     confirmed on                        Xenial 16.04
 #
 #Notes: -Ubuntu Precise-installer crashes with error near end.  unsupported.
 
@@ -246,7 +246,14 @@ case $1  in
 esac
 
 cdfs (){
+    log_msg "General space-saving clean-up of THIS COMPUTER before building"
+    log_msg "  Remove all old kernels" #(borrowed from PinguyBuilder 4.3.8)
+    dpkg -l 'linux-*' | sed '/^ii/!d;/'"$(uname -r | sed "s/\(.*\)-\([^0-9]\+\)/\1/")"'/d;s/^[^ ]* [^ ]* \([^ ]*\).*/\1/;/[0-9]/!d' | xargs apt-get -y purge
+    echo && echo
+    log_msg "  Remove all orphaned packages (autoremove)"
+    apt-get -y -q autoremove
 
+    echo && echo
     log_msg "Enabling ${BRAND_INIT}-firstboot"
     chmod 755 /etc/init.d/"${BRAND_INIT}-firstboot"
     update-rc.d "${BRAND_INIT}-firstboot" defaults
@@ -367,8 +374,11 @@ cdfs (){
 # original apt-setup saved to apt-setup.save
 
 mkdir -p /target/boot/efi
-touch /target/boot/efi/startup.nsh
-echo "fs0:\EFI\ubuntu\grubx64.efi" >> /target/boot/efi/startup.nsh
+if [ "${ARCH}" = "amd64" ] ; then
+    echo "fs0:\EFI\ubuntu\grubx64.efi" > /target/boot/efi/startup.nsh
+else
+    echo "fs0:\EFI\ubuntu\grubia32.efi" > /target/boot/efi/startup.nsh
+fi
 rm -f /target/etc/gdm/custom.conf
 rm -f /target/etc/mdm/mdm.conf
 sed -i '/cdrom:/d' /target/etc/apt/sources.list
@@ -427,7 +437,7 @@ FOO
     sed -i -e "s@.*\(GRUB_DISTRIBUTOR\)=.*@\1=\"$LIVECDLABEL\"@" \
         $WORKDIR/dummysys/etc/default/grub
 
-    log_msg "Cleaning up files not needed for the live in $WORKDIR/dummysys"
+    log_msg "Cleaning up files not needed for the live cd in $WORKDIR/dummysys"
     rm -rf $WORKDIR/dummysys/etc/apt/sources.list.d/*.save &> /dev/null
 # rik rm -rf $WORKDIR/dummysys/etc/apt/apt.conf.d/* &> /dev/null
 # rik rm -rf $WORKDIR/dummysys/etc/apt/preferences.d/* &> /dev/null
@@ -607,21 +617,38 @@ FOO
     mkdir -p $WORKDIR/ISOTMP/pool
     cd $WORKDIR/ISOTMP/pool
 
+    #if ANY package is unavailable, the whole block of downloads will fail.
     apt-get download -q \
         b43-fwcutter \
-        bcmwl-kernel-source \
+        bcmwl-kernel-source
+
+    apt-get download -q \
         efibootmgr \
         grub-common \
         grub-efi \
-        grub-efi-amd64 \
-        grub-efi-amd64-bin \
-        grub-efi-amd64-signed \
         grub-efi-ia32 \
         grub-efi-ia32-bin \
+        grub-pc\
         grub-pc-bin \
         grub2-common \
+        grub-gfxpayload-lists \
         secureboot-db \
         shim shim-signed
+
+    #These packages probably are not available on 32bit, so download separately
+    if [ "${ARCH}" = "amd64" ] ; then
+        apt-get download -q \
+            grub-efi-amd64 \
+            grub-efi-amd64-bin \
+            grub-efi-amd64-signed
+    fi
+
+    #libefivar0 and mokutil added by Pinguy in 4.3?  
+    log_msg "  download efi helper files (optional - may not be available)"
+    #example: not available in 12.04, so download separately
+    apt-get download -q libefivar0
+    apt-get download -q mokutil
+
 
     mkdir -p $WORKDIR/ISOTMP/dists
     cd $WORKDIR/ISOTMP/
@@ -951,7 +978,7 @@ FOO
 
     sleep 1
 
-    #checking the size of the compressed filesystem to ensure it meets the iso9660 spec for a single file"
+    #checking the size of the compressed filesystem to ensure it meets the iso9660 spec for a single file
     SQUASHFSSIZE=$(ls -s $WORKDIR/ISOTMP/casper/filesystem.squashfs | awk -F " " '{print $1}')
     if [ "$SQUASHFSSIZE" -gt "3999999" ]; then
         log_msg "The compressed filesystem is larger than genisoimage allows for a single file. You must try to reduce the amount of data you are backing up and try again."
@@ -1040,10 +1067,11 @@ iso (){
     # create the md5 sum file so the user doesn't have to - this is good so the
     # iso file can later be tested to ensure it hasn't become corrupted
 
-    log_msg "Creating $CUSTOMISO.md5 in $WORKDIR"
+    log_msg "Creating .md5 and .sha256 in $WORKDIR"
 
     cd $WORKDIR
     md5sum $CUSTOMISO > $CUSTOMISO.md5
+    sha256sum $CUSTOMISO > $CUSTOMISO.sha256
 
     sleep 1
 
