@@ -1,3 +1,10 @@
+wasta-remastersys (4.4.4) xenial; urgency=medium
+
+  * skelcopy: making sure .config/dconf/user references to username
+    removed
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Wed, 08 Mar 2017 16:12:26 +0300
+
 wasta-remastersys (4.4.3) xenial; urgency=medium
 
   * wasta-remastersys-skelcopy: updated for initial Wasta-Linux support
