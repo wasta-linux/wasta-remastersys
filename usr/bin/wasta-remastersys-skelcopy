@@ -4,7 +4,9 @@ testroot="`whoami`"
 
 # checking to make sure script is running with root privileges
 if [ "$(whoami)" != "root" ]; then
+    echo
     echo "Need to be root or run with sudo. Exiting."
+    echo
     exit 1
 fi
 
@@ -13,6 +15,7 @@ if [ "$SKELUSER" = "" ]; then
     echo
     echo "Usage is: wasta-remastersys-skelcopy username"
     echo "Where username is a valid user on the system"
+    echo
     exit 1
 fi
 
@@ -39,7 +42,7 @@ if [ -d "$SKELFOLDER" ]; then
     [ -e .kde* ]         && rsync -a --delete .kde*         /etc/skel/
 # rik: there is a lot of cruft in there that I don't think people need so
 #      not copying .local over anymore
-#    [ -e .local ]       && rsync -a --delete .local        /etc/skel/
+#   [ -e .local ]        && rsync -a --delete .local        /etc/skel/
     [ -e .mate* ]        && rsync -a --delete .mate*        /etc/skel/
     [ -e .mplayer ]      && rsync -a --delete .mplayer      /etc/skel/
     [ -e .pekwm ]        && rsync -a --delete .pekwm        /etc/skel/
@@ -55,6 +58,7 @@ if [ -d "$SKELFOLDER" ]; then
     echo
     echo "Cleaning up files in /etc/skel"
     echo
+    [ -e /etc/skel/.cinnamon/backgrounds ]      && rm -rf /etc/skel/.cinnamon/backgrounds/user-folders.*
     [ -e /etc/skel/.config/chromium ]           && rm -rf /etc/skel/.config/chromium
     [ -e /etc/skel/.config/evolution ]          && rm -rf /etc/skel/.config/evolution
     [ -e /etc/skel/.config/fieldworks ]         && rm -rf /etc/skel/.config/fieldworks
@@ -92,19 +96,30 @@ if [ -d "$SKELFOLDER" ]; then
     find /etc/skel/ -name "*cache*"    | xargs rm -rf '{}'
     find /etc/skel/ -name "*socket*"   | xargs rm -rf '{}'
     find /etc/skel/ -name "*tmp*"      | xargs rm -rf '{}'
-#Desperate measures to prevent sharing files containing private information
-#  about the source-user.
-#DELETE any filename that even remotely matches the name of the source-user
+
+    #Desperate measures to prevent sharing files containing private information
+    #  about the source-user.
+    #DELETE any filename that even remotely matches the name of the source-user
     find /etc/skel/ | grep "$SKELUSER" | xargs rm -rf '{}'
-#DELETE any file whose contents even remotely match the name of the source-user
+    #DELETE any file whose contents even remotely match the name of the source-user
     grep -Rl "$SKELUSER" /etc/skel     | xargs rm -rf '{}'
+
+    #Even though dconf/user contains userid we need it for config so re-copying
+    #IF do a sed on username the dconf settings aren't set correctly
+    [ -e .config/dconf ] && rsync -a --delete .config/dconf /etc/skel/.config/
+
+    # cleanup ownership of files
     chown -R root:root /etc/skel
+    find /etc/skel -type f -exec chmod 644 {} \;
+    find /etc/skel -type d -exec chmod 755 {} \;
 
     echo
     echo "wasta-remastersys-skelcopy complete"
+    echo
     exit 0
 else
     echo
     echo "$1 either not found or doesn't have a proper home folder - exiting."
+    echo
     exit 1
 fi
