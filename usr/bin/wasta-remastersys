@@ -391,11 +391,11 @@ rm -f /target/etc/gdm/custom.conf
 rm -f /target/etc/mdm/mdm.conf
 # ***rik: DONT remove cdrom or else can't install efi packages
 # sed -i '\@cdrom:@d' /target/etc/apt/sources.list
-# ***rik: livecd cdrom entry created by casper(?) on livecd boot.
+# ***rik: livecd cdrom entry created by casper/ubiquity on livecd boot.
 #  However, livecd cdrom entry removed by ubiquity in /target so need to
-#  ensure all relevant files forcibly copied over to make the cd packages
+#  ensure all relevant files forcibly copied over to make the cdrom packages
 #  (grub-efi, shim, etc.) available for offline install on the target system.
-#  The firstboot script will later clean up.
+#  The wasta-remastersys-firstboot script will later clean up.
 cp /etc/apt/sources.list /target/etc/apt/sources.list
 rsync -av /var/lib/apt/ /target/var/lib/apt/
 FOO
@@ -413,7 +413,8 @@ FOO
     else
         log_msg "Creating $WORKDIR folder tree"
         mkdir -p $WORKDIR/ISOTMP/{casper,preseed}
-        mkdir -p $WORKDIR/dummysys/{dev,etc,proc,tmp,sys,mnt,media/cdrom,var}
+        # ***rik: not creating media only, not media/cdrom
+        mkdir -p $WORKDIR/dummysys/{dev,etc,proc,tmp,sys,mnt,media,var}
         if [ -d /run ]; then
             mkdir -p $WORKDIR/dummysys/run
         fi
@@ -674,7 +675,7 @@ FOO
 
     # ***rik: previously, was sending &> to /dev/null which meant Packages was empty!
     log_msg "  generating package list for local packages"
-    dpkg-scanpackages pool 1> dists/Packages
+    dpkg-scanpackages pool > dists/Packages
     gzip -9c dists/Packages > dists/Packages.gz
 
     # check and see if they have a custom isolinux already setup. eg. they copied over
