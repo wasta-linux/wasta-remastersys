@@ -413,7 +413,8 @@ FOO
     else
         log_msg "Creating $WORKDIR folder tree"
         mkdir -p $WORKDIR/ISOTMP/{casper,preseed}
-        # ***rik: not creating media only, not media/cdrom
+        # ***rik: creating media only, not media/cdrom or else symlink
+        #         creation by casper on livecd boot won't work
         mkdir -p $WORKDIR/dummysys/{dev,etc,proc,tmp,sys,mnt,media,var}
         if [ -d /run ]; then
             mkdir -p $WORKDIR/dummysys/run
@@ -1044,7 +1045,8 @@ iso (){
 
     #Step 6.5 - Added by Tim Farley. Make ISO compatible with Ubuntu Startup Disk Creator (Karmic).
     log_msg "Making disk compatible with Ubuntu Startup Disk Creator."
-    . /etc/lsb-release
+    # ***rik: what is below line for? Commenting out for now....
+    #. /etc/lsb-release
     touch $WORKDIR/ISOTMP/ubuntu
     touch $WORKDIR/ISOTMP/.disk/base_installable
     echo "full_cd/single" > $WORKDIR/ISOTMP/.disk/cd_type
