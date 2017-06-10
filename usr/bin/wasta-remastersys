@@ -674,8 +674,8 @@ FOO
 
     # ***rik: previously, was sending &> to /dev/null which meant Packages was empty!
     log_msg "  generating package list for local packages"
-    dpkg-scanpackages pool 1> dists/Packages 2> /dev/null
-    gzip -9c dists/Packages dists/Packages.gz
+    dpkg-scanpackages pool 1> dists/Packages
+    gzip -9c dists/Packages > dists/Packages.gz
 
     # check and see if they have a custom isolinux already setup. eg. they copied over
     # the isolinux folder from their original livecd or made a custom one for their distro
