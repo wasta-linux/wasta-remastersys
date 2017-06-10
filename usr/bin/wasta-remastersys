@@ -88,6 +88,8 @@ do_start() {
         dpkg-reconfigure openssh-server &> /dev/null
         #ensure all required 'at' files exist with proper file permission
         dpkg-reconfigure at &> /dev/null
+        # ***rik: clear any existing cdrom sources (leftover from livecd install)
+        sed -i '\@cdrom:@d' /etc/apt/sources.list &> /dev/null
 
         #Place your custom commands below this line
 
@@ -438,8 +440,11 @@ FOO
     log_msg "Adding CD-ROM to source list"
     # ***rik: what is below line for? Commenting out for now....
     #. /etc/lsb-release
+    # ***rik: we remove any existing cdrom because casper auto mounts the cdrom from
+    #         the livecd at boot time, so no need to manually add: manually adding
+    #         also not supported because will get complaints that cdroms can only
+    #         be added using apt-cdrom (which I think casper is using at boot time).
     sed -i '/cdrom:/d' $WORKDIR/dummysys/etc/apt/sources.list &> /dev/null
-    echo "deb cdrom:[$DISKINFONAME $DISTRIB_RELEASE - Release $ARCH]/ dists/" >> $WORKDIR/dummysys/etc/apt/sources.list
 
     #Copying grub config
     cp /etc/default/grub $WORKDIR/dummysys/etc/default/grub
@@ -663,7 +668,6 @@ FOO
     #example: not available in 12.04, so download separately
     apt-get download -q libefivar0
     apt-get download -q mokutil
-
 
     mkdir -p $WORKDIR/ISOTMP/dists
     cd $WORKDIR/ISOTMP/
