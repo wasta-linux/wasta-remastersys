@@ -1,22 +1,28 @@
 #!/bin/bash
 
-# remastersys script to make an installable livecd/dvd from a
+# ==============================================================================
+# wasta-remastersys: script to make an installable livecd/dvd from a
 #   customized Ubuntu-based system
 #
 #
-#  Originally created by Tony "Fragadelic" Brijeski
-#  Copyright 2007-2012 Tony "Fragadelic" Brijeski <tb6517@yahoo.com>
+# Originally created by Tony "Fragadelic" Brijeski
+# Copyright 2007-2012 Tony "Fragadelic" Brijeski <tb6517@yahoo.com>
 #
-#  Most recently forked from PinguyBuilder which contained EFI bootcode.
-#  Includes most code changes found in the forks Respin and Bodhibuilder
+# Most recently forked from PinguyBuilder which contained EFI bootcode.
+# Includes most code changes found in the forks Respin and Bodhibuilder
 #
-#
-#  This version was tested on variants of Ubuntu's Precise 12.04 and up
+# This version was tested on variants of Ubuntu's Precise 12.04 and up
 #     confirmed on Cinnamon Mint Maya 13  (based on 12.04)
 #     confirmed on Cinnamon Mint 17.x,    Trusty 14.04
 #     confirmed on                        Xenial 16.04
 #
-#Notes: -Ubuntu Precise-installer crashes with error near end.  unsupported.
+# Notes: Ubuntu Precise - installer crashes with error near end.  unsupported.
+#
+# 2017-06-10 rik: cleaned up apt-setup to ensure the livecd local packages
+#     are available offline install (needed for offline uefi installation)
+#   - Offline Packages.gz was empty, correcting syntax to properly generate.
+#
+# ==============================================================================
 
 BRANDING="wasta-remastersys"
 BRAND_NAME="${BRANDING}"
@@ -381,7 +387,15 @@ else
 fi
 rm -f /target/etc/gdm/custom.conf
 rm -f /target/etc/mdm/mdm.conf
-sed -i '/cdrom:/d' /target/etc/apt/sources.list
+# ***rik: DONT remove cdrom or else can't install efi packages
+# sed -i '\@cdrom:@d' /target/etc/apt/sources.list
+# ***rik: livecd cdrom entry created by casper(?) on livecd boot.
+#  However, livecd cdrom entry removed by ubiquity in /target so need to
+#  ensure all relevant files forcibly copied over to make the cd packages
+#  (grub-efi, shim, etc.) available for offline install on the target system.
+#  The firstboot script will later clean up.
+cp /etc/apt/sources.list /target/etc/apt/sources.list
+rsync -av /var/lib/apt/ /target/var/lib/apt/
 FOO
     chmod 755 /usr/share/ubiquity/apt-setup
 
@@ -422,7 +436,8 @@ FOO
     DISKINFONAME=$(echo $LIVECDLABEL | awk '{print $1}')
     DISTRIB_RELEASE=$(echo $LIVECDLABEL | awk '{print $2}')
     log_msg "Adding CD-ROM to source list"
-    . /etc/lsb-release
+    # ***rik: what is below line for? Commenting out for now....
+    #. /etc/lsb-release
     sed -i '/cdrom:/d' $WORKDIR/dummysys/etc/apt/sources.list &> /dev/null
     echo "deb cdrom:[$DISKINFONAME $DISTRIB_RELEASE - Release $ARCH]/ dists/" >> $WORKDIR/dummysys/etc/apt/sources.list
 
@@ -652,7 +667,11 @@ FOO
 
     mkdir -p $WORKDIR/ISOTMP/dists
     cd $WORKDIR/ISOTMP/
-    dpkg-scanpackages pool &> /dev/null | gzip -9c > dists/Packages.gz
+
+    # ***rik: previously, was sending &> to /dev/null which meant Packages was empty!
+    log_msg "  generating package list for local packages"
+    dpkg-scanpackages pool 1> dists/Packages 2> /dev/null
+    gzip -9c dists/Packages dists/Packages.gz
 
     # check and see if they have a custom isolinux already setup. eg. they copied over
     # the isolinux folder from their original livecd or made a custom one for their distro

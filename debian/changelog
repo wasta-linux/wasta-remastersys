@@ -1,3 +1,12 @@
+wasta-remastersys (4.4.5) xenial; urgency=medium
+
+  * corrected apt-setup to use offline repository source during install so
+    uefi packages can be installed without network
+  * corrected Packages generation for offline repository (previously was
+    creating an empty Packages list)
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Sat, 10 Jun 2017 09:56:51 +0300
+
 wasta-remastersys (4.4.4) xenial; urgency=medium
 
   * skelcopy: making sure .config/dconf/user references to username
