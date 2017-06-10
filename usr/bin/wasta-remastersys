@@ -440,8 +440,8 @@ FOO
     DISKINFONAME=$(echo $LIVECDLABEL | awk '{print $1}')
     DISTRIB_RELEASE=$(echo $LIVECDLABEL | awk '{print $2}')
     log_msg "Adding CD-ROM to source list"
-    # ***rik: what is below line for? Commenting out for now....
-    #. /etc/lsb-release
+    # ***rik: below sets environment variables in this script from lsb-release
+    . /etc/lsb-release
     # ***rik: we remove any existing cdrom because casper auto mounts the cdrom from
     #         the livecd at boot time, so no need to manually add: manually adding
     #         also not supported because will get complaints that cdroms can only
@@ -451,7 +451,7 @@ FOO
     #Copying grub config
     cp /etc/default/grub $WORKDIR/dummysys/etc/default/grub
 
-    # rik: default to no grub boot menu, I think ubiquity is smart enough
+    # ***rik: default to no grub boot menu, I think ubiquity is smart enough
     #   to modify to show again if other OSs are detected
     sed -i -e "s@.*\(GRUB_HIDDEN_TIMEOUT\)=.*@\1=0@" \
         $WORKDIR/dummysys/etc/default/grub
@@ -461,9 +461,9 @@ FOO
 
     log_msg "Cleaning up files not needed for the live cd in $WORKDIR/dummysys"
     rm -rf $WORKDIR/dummysys/etc/apt/sources.list.d/*.save &> /dev/null
-# rik rm -rf $WORKDIR/dummysys/etc/apt/apt.conf.d/* &> /dev/null
-# rik rm -rf $WORKDIR/dummysys/etc/apt/preferences.d/* &> /dev/null
-# rik rm -rf $WORKDIR/dummysys/var/lib/apt/lists/* -vf &> /dev/null
+# ***rik rm -rf $WORKDIR/dummysys/etc/apt/apt.conf.d/* &> /dev/null
+# ***rik rm -rf $WORKDIR/dummysys/etc/apt/preferences.d/* &> /dev/null
+# ***rik rm -rf $WORKDIR/dummysys/var/lib/apt/lists/* -vf &> /dev/null
     rm -rf $WORKDIR/dummysys/var/lib/apt/lists/lock &> /dev/null
     rm -rf $WORKDIR/dummysys/var/cache/apt/archives/* &> /dev/null
     rm -rf $WORKDIR/dummysys/var/lib/ureadahead/pack &> /dev/null
@@ -539,7 +539,7 @@ FOO
             ln -sf ../run run
         fi
 
-        # rik: creating empty placeholder files this way has proved problematic.
+        # ***rik: creating empty placeholder files this way has proved problematic.
         #   The files are owned by root:root which isn't right.
         #   They all seem to autocreate just fine, so unsure why the original
         #   author thought it necessary to create these placeholder files.
@@ -1045,8 +1045,8 @@ iso (){
 
     #Step 6.5 - Added by Tim Farley. Make ISO compatible with Ubuntu Startup Disk Creator (Karmic).
     log_msg "Making disk compatible with Ubuntu Startup Disk Creator."
-    # ***rik: what is below line for? Commenting out for now....
-    #. /etc/lsb-release
+    # ***rik: below sets environment variables in this script from lsb-release
+    . /etc/lsb-release
     touch $WORKDIR/ISOTMP/ubuntu
     touch $WORKDIR/ISOTMP/.disk/base_installable
     echo "full_cd/single" > $WORKDIR/ISOTMP/.disk/cd_type
