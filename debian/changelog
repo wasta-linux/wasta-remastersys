@@ -1,3 +1,10 @@
+wasta-remastersys (4.4.7) xenial; urgency=low
+
+  * ensure CD Volume Label <= 32 chars long
+  * restrict purge old kernels to image/header files
+
+ -- Justin Luth <jluth@mail.com>  Tue, 06 Nov 2017 12:14:13 +0300
+
 wasta-remastersys (4.4.6) xenial; urgency=medium
 
   * uncommenting the ". /etc/lsb-release" lines so that the env variables
