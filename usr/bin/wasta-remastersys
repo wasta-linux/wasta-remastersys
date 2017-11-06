@@ -1076,7 +1076,7 @@ iso (){
     else
         log_msg "   Warning: boot/grub/efi.img is missing!! Skipping EFI boot."
     fi
-    $CREATEISO -iso-level 3 -quiet -r -V "$LIVECDLABEL" -cache-inodes -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table ${ALT_BOOT} -o $WORKDIR/$CUSTOMISO $WORKDIR/ISOTMP &>>$WORKDIR/"${BRAND_LOG}"
+    $CREATEISO -iso-level 3 -quiet -r -V "$(echo $LIVECDLABEL | cut -c -32)" -cache-inodes -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table ${ALT_BOOT} -o $WORKDIR/$CUSTOMISO $WORKDIR/ISOTMP &>>$WORKDIR/"${BRAND_LOG}"
 
     if [ ! -f $WORKDIR/$CUSTOMISO ]; then
         log_msg "The iso was not created. There was a problem. Exiting"
