@@ -3,4 +3,4 @@ wasta-remastersys: unstripped-binary-or-object
 wasta-remastersys: depends-on-essential-package-without-using-version
 wasta-remastersys: depends-on-obsolete-package
 wasta-remastersys: binary-without-manpage usr/bin/wasta-remastersys-skelcopy
-
+wasta-remastersys binary: diff-contains-git-control-dir .git

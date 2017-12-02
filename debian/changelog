@@ -1,9 +1,17 @@
+wasta-remastersys (4.5.0.0) bionic; urgency=low
+
+  * add support for bionic
+  * remove ubiquity on firstboot
+  * add option to specify installation slideshow
+
+ -- Justin Luth <jluth@mail.com>  Fri, 01 Dec 2017 12:14:13 +0300
+
 wasta-remastersys (4.4.7.1) xenial; urgency=low
 
   * ensure CD Volume Label <= 32 chars long
   * restrict purge old kernels to image/header files
 
- -- Justin Luth <jluth@mail.com>  Tue, 06 Nov 2017 12:14:13 +0300
+ -- Justin Luth <jluth@mail.com>  Mon, 06 Nov 2017 12:14:13 +0300
 
 wasta-remastersys (4.4.6) xenial; urgency=medium
 
