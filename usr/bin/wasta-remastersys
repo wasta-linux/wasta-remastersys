@@ -149,6 +149,11 @@ do_start() {
         [ "\$VERBOSE" != no ] && log_end_msg \$ES
         apt-get autoremove -y -q &> /dev/null
         return \$ES
+    else
+        #17.10+ support: mark ubiquity.desktop as trusted executable.
+        if [ $(which gio) ]; then
+          su $LIVEUSER -c 'gio set "/home/$LIVEUSER/Desktop/ubiquity.desktop" metadata::trusted yes'
+        fi
     fi
 }
 
@@ -802,6 +807,11 @@ FOO
                 sed -i \
                     -e "s/RELEASE/$LIVECDLABEL/" \
                   "/$LIVEHOME/Desktop/$(basename $UBIQUITYDESKTOP)" &> /dev/null
+                #17.10+ support: mark ubiquity.desktop as trusted executable.
+                sed -i \
+                    -e "\|ubiquity.desktop| s|su .* -c|su $LIVEUSER -c|" \
+                    -e "\|ubiquity.desktop| s|/home/[^/]+/|/$LIVEHOME/|" \
+                  /etc/init.d/"${BRAND_INIT}-firstboot"
             fi
         fi
     fi
