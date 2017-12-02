@@ -9,6 +9,6 @@ Homepage: https://github.com/wasta-linux/wasta-remastersys
 Package: wasta-remastersys
 Architecture: all
 #removed Depends: dialog(GUI-only?), discover1 | discover(unused), eject(casper), gksu(GUI only?), laptop-detect(ubiquity), libdebian-installer4(ubiquity), os-prober(ubiquity), ubiquity-frontend-debconf(unused), aufs-tools | unionfs-fuse(unused),  user-setup(casper), xresprobe(unused)
-Depends: archdetect-deb, bash, casper, coreutils, dpkg-dev, findutils, libc-bin, memtest86+, mkisofs | genisoimage, mount, passwd, rsync, sed, squashfs-tools, syslinux, syslinux-common, ubiquity-slideshow | ubiquity-slideshow-ubuntu, util-linux
+Depends: archdetect-deb, bash, casper, coreutils, dpkg-dev, findutils, libc-bin, memtest86+, mkisofs | genisoimage, mount, passwd, rsync, sed, squashfs-tools, syslinux, syslinux-common, util-linux
 Description: Create a livecd of the installed system
  You can either make a distributable livecd or a backup of your system.

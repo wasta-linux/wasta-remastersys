@@ -5,9 +5,15 @@
 
 set -e
 
-if [ -f /etc/wasta-remastersys.conf.old ]
+if [ -f /etc/wasta-remastersys/wasta-remastersys.conf.old ]
 then
-    mv /etc/wasta-remastersys.conf.old /etc/wasta-remastersys.conf
+    mv /etc/wasta-remastersys/wasta-remastersys.conf.old \
+       /etc/wasta-remastersys/wasta-remastersys.conf
+    if [ -z "$(grep SLIDESHOW= /etc/wasta-remastersys/wasta-remastersys.conf)" ]; then
+        sed -i \
+            -e "$ a\ \n\nSLIDESHOW=ubuntu" \
+          /etc/wasta-remastersys/wasta-remastersys.conf
+    fi
 fi
 
 exit 0

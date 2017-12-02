@@ -274,6 +274,11 @@ cdfs (){
     log_msg "Making sure syslinux-themes is not installed"
     apt-get -y -q purge syslinux-themes* &> /dev/null
 
+    if [ -n "$SLIDESHOW" ]; then
+        echo "installing the user selected slideshow $SLIDESHOW"
+        apt-get -y -q install ubiquity-slideshow-$SLIDESHOW
+    fi
+
     # check whether system is gnome or kde based to load the correct frontend
 
     if [ "$(ps axf | grep startkde | grep -v grep)" != "" -o "$(ps axf | grep kwin | grep -v grep)" != "" ]; then
