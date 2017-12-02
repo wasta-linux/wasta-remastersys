@@ -810,12 +810,12 @@ FOO
             log_msg "Copying the install icon to the desktop of $LIVEUSER"
             UBIQUITYDESKTOP=$(find /usr -name ubiquity*.desktop | head -1)
             if [ "$UBIQUITYDESKTOP" ]; then
-                install -d -o $LIVEUSER -g $LIVEUSER /$LIVEHOME/Desktop &> /dev/null
-                install -D -o $LIVEUSER -g $LIVEUSER $UBIQUITYDESKTOP /$LIVEHOME/Desktop/ &> /dev/null
+                install -d -o $LIVEUSER -g $LIVEUSER $LIVEHOME/Desktop &> /dev/null
+                install -D -o $LIVEUSER -g $LIVEUSER $UBIQUITYDESKTOP $LIVEHOME/Desktop/ &> /dev/null
                 #casper modifier used to change desktop installer name
                 sed -i \
                     -e "s/RELEASE/$LIVECDLABEL/" \
-                  "/$LIVEHOME/Desktop/$(basename $UBIQUITYDESKTOP)" &> /dev/null
+                  "$LIVEHOME/Desktop/$(basename $UBIQUITYDESKTOP)" &> /dev/null
                 #17.10+ support: mark ubiquity.desktop as trusted executable.
                 sed -i \
                     -e "\|ubiquity.desktop| s|su .* -c|su $LIVEUSER -c|" \
