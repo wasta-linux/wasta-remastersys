@@ -24,6 +24,12 @@
 #
 # ==============================================================================
 
+# checking to make sure script is running with root privileges
+if [ "$(whoami)" != "root" ]; then
+    echo "Need to be root or run with sudo. Exiting."
+    exit 1
+fi
+
 BRANDING="wasta-remastersys"
 BRAND_NAME="${BRANDING}"
 BRAND_BIN="${BRANDING}"
@@ -37,21 +43,64 @@ if [ ! -d "/etc/$BRAND_ETC" ]; then
 fi
 . /etc/"${BRAND_ETC}"/"${BRAND_NAME}.version"
 
-# checking to make sure script is running with root privileges
-if [ "$(whoami)" != "root" ]; then
-    echo "Need to be root or run with sudo. Exiting."
-    exit 1
-fi
-
 # Variables
 ARCH=$(archdetect | awk -F "/" '{print $1}')
+
+# load the ${BRAND_NAME}.conf file
+. /etc/"${BRAND_ETC}"/"${BRAND_NAME}.conf"
+
+# if ${BRAND_NAME}.conf file is incorrect or missing, ensure valid values
+
+if [ "$LIVEUSER" == "" ]; then
+    #Somebody must have removed the username from the configuration file
+    LIVEUSER="custom"
+fi
+#make sure live user is all lowercase
+LIVEUSER=${LIVEUSER,,}
+
+
+if [ "$BASEWORKDIR" == "" ]; then
+    BASEWORKDIR=/home/"${BRAND_NAME}"
+fi
+#replace spaces with an underscore
+WORKDIR=$(echo ${BASEWORKDIR}/${BRAND_NAME} | sed -e 's/\\ /_/g' -e 's/ /_/g')
+
+if [ ! -d $WORKDIR ]; then
+    mkdir -p $WORKDIR
+fi
+
+if [ -f $WORKDIR/"${BRAND_LOG}" ]; then
+    rm -f $WORKDIR/"${BRAND_LOG}" &> /dev/null
+fi
+
+touch $WORKDIR/"${BRAND_LOG}"
+
+#added log_msg to reduce size. code provided by Ivailo (a.k.a. SmiL3y)
+log_msg() {
+    echo "$1"
+    echo "$1" >>$WORKDIR/"${BRAND_LOG}"
+}
+
+if [ "$LIVECDLABEL" == "" ]; then
+    LIVECDLABEL="Custom-Live-CD"
+fi
+
+CDBOOTTYPE="ISOLINUX"
+
+if [ "$SQUASHFSOPTS" == "" ]; then
+    SQUASHFSOPTS="-no-recovery -always-use-fragments -b 1M -no-duplicates -comp xz"
+fi
+
+if ! [ "$BACKUPSHOWINSTALL" == "0" -o "$BACKUPSHOWINSTALL" == "1" ]; then
+    BACKUPSHOWINSTALL="1"
+fi
 
 #create ${BRAND_INIT}-firstboot script if it doesn't exist and populate with at least removal of the ubiquity*.desktop file from users Desktop and fix for recovery mode
 fbtest=""
 [ -f /etc/init.d/"${BRAND_INIT}-firstboot" ] &&
-    fbtest=$(grep "#REM442" /etc/init.d/"${BRAND_INIT}-firstboot")
+    fbtest=$(grep "#REM450" /etc/init.d/"${BRAND_INIT}-firstboot")
 
-if [ "$fbtest" = "" ]; then
+if [ "$fbtest" == "" ]; then
     cat > /etc/init.d/"${BRAND_INIT}-firstboot" <<FOO
 #! /bin/sh
 ### BEGIN INIT INFO
@@ -69,8 +118,8 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:/usr/local/sbin
 . /lib/lsb/init-functions
 
 do_start() {
-    #REM442
-    if [ "\`cat /proc/cmdline | grep casper\`" = "" ]; then
+    #REM450
+    if [ "\`cat /proc/cmdline | grep casper\`" == "" ]; then
         [ "\$VERBOSE" != no ] && log_begin_msg "Running ${BRAND_INIT}-firstboot"
         (sleep 60 && update-rc.d -f ${BRAND_INIT}-firstboot remove) &
         sed -i -e 's/root:x:/root:!:/g' /etc/shadow
@@ -121,59 +170,6 @@ FOO
 
 fi
 
-# load the ${BRAND_NAME}.conf file
-. /etc/"${BRAND_ETC}"/"${BRAND_NAME}.conf"
-
-# if ${BRAND_NAME}.conf file is incorrect or missing, make sure to set defaults
-
-if [ "$LIVEUSER" = "" ]; then
-    #Somebody must have removed the username from the configuration file
-    LIVEUSER="custom"
-fi
-#make sure live user is all lowercase
-LIVEUSER=${LIVEUSER,,}
-
-
-if [ "$BASEWORKDIR" = "" ]; then
-    BASEWORKDIR=/home/"${BRAND_NAME}"
-fi
-#replace spaces with an underscore
-WORKDIR=$(echo ${BASEWORKDIR}/${BRAND_NAME} | sed -e 's/\\ /_/g' -e 's/ /_/g')
-
-if [ ! -d $WORKDIR ]; then
-    mkdir -p $WORKDIR
-fi
-
-if [ -f $WORKDIR/"${BRAND_LOG}" ]; then
-    rm -f $WORKDIR/"${BRAND_LOG}" &> /dev/null
-fi
-
-touch $WORKDIR/"${BRAND_LOG}"
-
-#added log_msg to reduce size. code provided by Ivailo (a.k.a. SmiL3y)
-log_msg() {
-    echo "$1"
-    echo "$1" >>$WORKDIR/"${BRAND_LOG}"
-}
-
-if [ "$LIVECDLABEL" = "" ]; then
-    LIVECDLABEL="Custom-Live-CD"
-fi
-
-CDBOOTTYPE="ISOLINUX"
-
-if [ "$LIVECDURL" = "" ]; then
-    LIVECDURL=""
-fi
-
-if [ "$SQUASHFSOPTS" = "" ]; then
-    SQUASHFSOPTS="-no-recovery -always-use-fragments -b 1M -no-duplicates -comp xz"
-fi
-
-if ! [ "$BACKUPSHOWINSTALL" = "0" -o "$BACKUPSHOWINSTALL" = "1" ]; then
-    BACKUPSHOWINSTALL="1"
-fi
-
 case $2 in
     iso )
         log_msg "Creating the iso file only"
@@ -193,7 +189,7 @@ if [ "$3" != "" ]; then
     CUSTOMISO="$3"
 fi
 
-if [ "$CUSTOMISO" = "" ]; then
+if [ "$CUSTOMISO" == "" ]; then
     CUSTOMISO="custom$1.iso"
 fi
 
@@ -355,7 +351,7 @@ cdfs (){
             if [ "${AUTOLOGIN}" ] && [ "${AUTOLOGIN}" != "${LIVEUSER}" ]; then
               echo && echo
               log_msg "WARNING: LIVEUSER already defined in /etc/lightdm/lightdm.conf."
-              log_msg "         No autologin until ${LIVEUSER} = ${AUTOLOGIN}"
+              log_msg "         No autologin until ${LIVEUSER} == ${AUTOLOGIN}"
               echo && echo
             fi
         #JCL: removing - no idea why this is here.  Shouldn't have any impact on
@@ -382,7 +378,7 @@ cdfs (){
 # original apt-setup saved to apt-setup.save
 
 mkdir -p /target/boot/efi
-if [ "${ARCH}" = "amd64" ] ; then
+if [ "${ARCH}" == "amd64" ]; then
     echo "fs0:\EFI\ubuntu\grubx64.efi" > /target/boot/efi/startup.nsh
 else
     echo "fs0:\EFI\ubuntu\grubia32.efi" > /target/boot/efi/startup.nsh
@@ -487,7 +483,7 @@ FOO
         find $WORKDIR/dummysys/var/crash/ -type f -exec rm -f {} \;
     find $WORKDIR/dummysys/var/lib/ubiquity/ -type f -exec rm -f {} \;
 
-    if [ "$1" = "dist" ]; then
+    if [ "$1" == "dist" ]; then
 
         rm -f $WORKDIR/dummysys/etc/{group,passwd,shadow,shadow-,gshadow,gshadow-}
         rm -f $WORKDIR/dummysys/etc/wicd/{wired-settings.conf,wireless-settings.conf}
@@ -594,16 +590,16 @@ FOO
 
     # make sure the adduser and autologin functions of casper as set according to the mode
     log_msg "Making sure adduser and autologin functions of casper are set properly"
-    [ "$1" = "dist" ] && [ ! -d $WORKDIR/dummysys/home ] && mkdir $WORKDIR/dummysys/home
-    [ "$1" = "dist" ] && chmod 755 /usr/share/initramfs-tools/scripts/casper-bottom/*adduser /usr/share/initramfs-tools/scripts/casper-bottom/*autologin
-    [ "$1" = "backup" ] && [ -d $WORKDIR/dummysys/home ] && rm -rf $WORKDIR/dummysys/home
-    [ "$1" = "backup" ] && chmod 644 /usr/share/initramfs-tools/scripts/casper-bottom/*adduser /usr/share/initramfs-tools/scripts/casper-bottom/*autologin
+    [ "$1" == "dist" ] && [ ! -d $WORKDIR/dummysys/home ] && mkdir $WORKDIR/dummysys/home
+    [ "$1" == "dist" ] && chmod 755 /usr/share/initramfs-tools/scripts/casper-bottom/*adduser /usr/share/initramfs-tools/scripts/casper-bottom/*autologin
+    [ "$1" == "backup" ] && [ -d $WORKDIR/dummysys/home ] && rm -rf $WORKDIR/dummysys/home
+    [ "$1" == "backup" ] && chmod 644 /usr/share/initramfs-tools/scripts/casper-bottom/*adduser /usr/share/initramfs-tools/scripts/casper-bottom/*autologin
 
     #virtualbox creates a user with id 999 which conflicts with casper's default
     #  causing login to fail
     UID_999=$(getent passwd 999 | awk -F: '{ print $1}')
     if [ "${UID_999}" != "" ]; then
-        if [ "$(getent passwd 990)" = "" ]; then
+        if [ "$(getent passwd 990)" == "" ]; then
             log_msg "   avoiding conflict with ${UID_999}.  Using uid 990..."
             sed -i -e 's@user-uid 999@user-uid 990@' \
                 /usr/share/initramfs-tools/scripts/casper-bottom/*adduser
@@ -658,7 +654,7 @@ FOO
         shim shim-signed
 
     #These packages probably are not available on 32bit, so download separately
-    if [ "${ARCH}" = "amd64" ] ; then
+    if [ "${ARCH}" == "amd64" ]; then
         apt-get download -q \
             grub-efi-amd64 \
             grub-efi-amd64-bin \
@@ -716,7 +712,6 @@ FOO
             cp $MENU $WORKDIR/ISOTMP/isolinux/
         fi
         # setup isolinux for the livecd
-#        VERSION=$(lsb_release -r | awk '{print $2}' | awk -F "." '{print $1}')
         sed -e 's/__LIVECDLABEL__/'"$LIVECDLABEL"'/g' /etc/"${BRAND_ETC}"/isolinux/isolinux.cfg.vesamenu > \
         $WORKDIR/ISOTMP/isolinux/isolinux.cfg
         if [ "$SPLASHPNG" ]; then
@@ -756,7 +751,7 @@ FOO
 
     # Step 5 - Prepare casper.conf depending on whether this is a backup or dist
 
-    if [ "$1" = "backup" ]; then
+    if [ "$1" == "backup" ]; then
         BACKUPEXCLUDES=""
         log_msg "Excluding folders from the backup that will cause issues"
 
@@ -784,16 +779,16 @@ FOO
         if [ "$(who -u | grep -v root | cut -d " " -f1| uniq | wc -l)" != "1" ]; then
             LIVEUSER="$(grep '^[^:]*:[^:]*:1000:' /etc/passwd | awk -F ":" '{ print $1 }')"
         fi
-        if [ "$LIVEUSER" = "" ]; then
+        if [ "$LIVEUSER" == "" ]; then
             log_msg "Can't determine which user to use. Please logoff all users except for your main user and try again. Exiting."
             exit 1
         fi
         LIVEHOME=$(grep $LIVEUSER /etc/passwd | awk -F ":" '{print $6}')
-        if [ "$BACKUPSHOWINSTALL" = "1" ]; then
+        if [ "$BACKUPSHOWINSTALL" == "1" ]; then
             # copy the install icon to the sudo users desktop
             log_msg "Copying the install icon to the desktop of $LIVEUSER"
             UBIQUITYDESKTOP=$(find /usr -name ubiquity*.desktop | head -1)
-            if [ "$UBIQUITYDESKTOP" ] ; then
+            if [ "$UBIQUITYDESKTOP" ]; then
                 install -d -o $LIVEUSER -g $LIVEUSER /$LIVEHOME/Desktop &> /dev/null
                 install -D -o $LIVEUSER -g $LIVEUSER $UBIQUITYDESKTOP /$LIVEHOME/Desktop/ &> /dev/null
                 #casper modifier used to change desktop installer name
@@ -824,7 +819,7 @@ FOO
     # and make the passwdrestore file so the uid's are restored before the script finishes
     # if this is not done, the livecd user will not be created properly
     log_msg "Checking and setting user-setup-apply for the live system"
-    if [ "$1" = "dist" ]; then
+    if [ "$1" == "dist" ]; then
         # make sure user-setup-apply is present in case backup mode was last used
         if [ -f /usr/lib/ubiquity/user-setup/user-setup-apply.orig ]; then
             cp /usr/lib/ubiquity/user-setup/user-setup-apply.orig /usr/lib/ubiquity/user-setup/user-setup-apply
@@ -875,7 +870,7 @@ FOO
 #    ## See bohdibuilder code for process to create initrd.lz from initrd.img...
 #
 #    #exit if missing... either vmlinuz or vmlinuz.efi
-#    if [ ! -f $WORKDIR/ISOTMP/casper/vmlinuz.efi ] ; then
+#    if [ ! -f $WORKDIR/ISOTMP/casper/vmlinuz.efi ]; then
 #        if [ ! -f $WORKDIR/ISOTMP/casper/vmlinuz ]; then
 #            log_msg "Missing valid kernel. Exiting"
 #            exit 1
@@ -914,7 +909,7 @@ FOO
         REALFOLDERS="$REALFOLDERS $d"
     done
 
-    if [ "$1" = "backup" ]; then
+    if [ "$1" == "backup" ]; then
 
         for d in $(ls / | grep -v etc | grep -v run | grep -v tmp | grep -v sys | grep -v var | grep -v dev | grep -v media | grep -v mnt | grep -v lost+found | grep -v proc); do
             REALFOLDERS="$REALFOLDERS /$d"
@@ -977,7 +972,7 @@ FOO
     echo "--------------------------------------------" >>$WORKDIR/"${BRAND_LOG}"
 
     # cleanup the install icons as they aren't needed on the current system
-    if [ "$1" = "backup" ]; then
+    if [ "$1" == "backup" ]; then
         log_msg "Cleaning up the install icon from the user desktops"
         rm -rf /home/*/Desktop/ubiquity*.desktop &> /dev/null
     fi
@@ -1026,7 +1021,7 @@ FOO
 iso (){
 
     CREATEISO="$(which mkisofs)"
-    if [ "$CREATEISO" = "" ]; then
+    if [ "$CREATEISO" == "" ]; then
         CREATEISO="$(which genisoimage)"
     fi
 
