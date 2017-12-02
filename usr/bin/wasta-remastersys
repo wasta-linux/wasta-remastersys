@@ -206,7 +206,14 @@ CUSTOMISO=$(echo $CUSTOMISO | sed -e 's/\\ /_/g' -e 's/ /_/g')
 case $1  in
 
     backup)
-        log_msg "System Backup Mode Selected"
+        SESSION_TYPE=$(loginctl show-session $(loginctl | grep ${SUDO_USER:-$USER} | awk '{print $1}') -p Type)
+        log_msg "System Backup Mode Selected on Session $SESSION_TYPE"
+        if [ "$SESSION_TYPE" == "Type=wayland" ]; then
+          read -p "
+Wayland messes up the ubiquity installer.
+This requires research which we probably won't be doing soon.
+Press any key to continue and help design a fix...  " KEYSTROKE
+        fi
         ;;
 
     clean)
