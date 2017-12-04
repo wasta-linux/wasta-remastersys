@@ -390,6 +390,8 @@ cdfs (){
     fi
 
     cat > /usr/share/ubiquity/apt-setup <<FOO
+#!/bin/bash
+
 # ${BRAND_NAME} custom apt-setup
 # we don't run /usr/lib/ubiquity/apt-setup scripts
 # instead just use source system sources.list
