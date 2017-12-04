@@ -945,7 +945,10 @@ FOO
         done
     fi
 
-    mksquashfs $INCLUDES $REALFOLDERS $WORKDIR/ISOTMP/casper/filesystem.squashfs -no-duplicates $SQUASHFSOPTS -e root/.local/Trash root/.thumbnails root/.cache root/.bash_history root/.lesshst root/.nano_history /boot/efi/EFI /boot/grub $BASEWORKDIR $EXCLUDES 2>>$WORKDIR/"${BRAND_LOG}"
+    #17.04+ defaults to having a swapfile instead of a swap partition. Exclude it.
+    SWAPFILE="$(grep $' file\t' /proc/swaps | awk '{print $1}')"
+
+    mksquashfs $INCLUDES $REALFOLDERS $WORKDIR/ISOTMP/casper/filesystem.squashfs -no-duplicates $SQUASHFSOPTS -e root/.local/Trash root/.thumbnails root/.cache root/.bash_history root/.lesshst root/.nano_history /boot/efi/EFI /boot/grub $BASEWORKDIR $EXCLUDES $SWAPFILE 2>>$WORKDIR/"${BRAND_LOG}"
 
 
     sleep 1
