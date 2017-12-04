@@ -1,8 +1,9 @@
-wasta-remastersys (4.5.0.0) bionic; urgency=low
+wasta-remastersys (4.5.0.1) bionic; urgency=low
 
   * add support for bionic
   * remove ubiquity on firstboot
   * add option to specify installation slideshow
+  * exclude /swapfile - caused install/copy failure
 
  -- Justin Luth <jluth@mail.com>  Fri, 01 Dec 2017 12:14:13 +0300
 

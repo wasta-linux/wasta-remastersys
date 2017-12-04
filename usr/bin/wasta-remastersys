@@ -98,11 +98,11 @@ fi
 #create ${BRAND_INIT}-firstboot script if it doesn't exist and populate with at least removal of the ubiquity*.desktop file from users Desktop and fix for recovery mode
 fbtest=""
 [ -f /etc/init.d/"${BRAND_INIT}-firstboot" ] &&
-    fbtest=$(grep "#REM450" /etc/init.d/"${BRAND_INIT}-firstboot")
+    fbtest=$(grep "#REM4501" /etc/init.d/"${BRAND_INIT}-firstboot")
 
 if [ "$fbtest" == "" ]; then
     cat > /etc/init.d/"${BRAND_INIT}-firstboot" <<FOO
-#! /bin/sh
+#! /bin/bash
 ### BEGIN INIT INFO
 # Provides:          ${BRAND_INIT}-firstboot
 # Required-Start:    \$remote_fs \$syslog \$all
@@ -118,8 +118,8 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:/usr/local/sbin
 . /lib/lsb/init-functions
 
 do_start() {
-    #REM450
-    if [ "\`cat /proc/cmdline | grep casper\`" == "" ]; then
+    #REM4501
+    if [ "\$(cat /proc/cmdline | grep casper)" == "" ]; then
         [ "\$VERBOSE" != no ] && log_begin_msg "Running ${BRAND_INIT}-firstboot"
         (sleep 60 && update-rc.d -f ${BRAND_INIT}-firstboot remove) &
         sed -i -e 's/root:x:/root:!:/g' /etc/shadow
@@ -879,17 +879,17 @@ FOO
 #    case $ARCH in
 #        amd64 ) # 64bit needs vmlinuz.efi
 #            log_msg "Creating casper/vmlinuz.efi"
-#            cp -v /boot/vmlinuz-`uname -r` $WORKDIR/ISOTMP/casper/vmlinuz.efi
+#            cp -v /boot/vmlinuz-$(uname -r) $WORKDIR/ISOTMP/casper/vmlinuz.efi
 #            sed -i 's/vmlinuz$/vmlinuz\.efi/g' $WORKDIR/ISOTMP/isolinux/isolinux.cfg
 #        ;;
 #        *) # everything else needs just vmlinuz
 #            log_msg "Creating casper/vmlinuz"
-#            cp -v /boot/vmlinuz-`uname -r` $WORKDIR/ISOTMP/casper/vmlinuz
+#            cp -v /boot/vmlinuz-$(uname -r) $WORKDIR/ISOTMP/casper/vmlinuz
 #            sed -i 's/vmlinuz\.efi$/vmlinuz/g' $WORKDIR/ISOTMP/isolinux/isolinux.cfg
 #        ;;
 #    esac
 #    # Copy initrd into casper
-#    cp -v /boot/initrd.img-`uname -r` $WORKDIR/ISOTMP/casper/initrd.lz
+#    cp -v /boot/initrd.img-$(uname -r) $WORKDIR/ISOTMP/casper/initrd.lz
 #
 #    ## See bohdibuilder code for process to create initrd.lz from initrd.img...
 #
