@@ -456,7 +456,6 @@ FOO
     #Adding packages location to sources
     DISKINFONAME=$(echo $LIVECDLABEL | awk '{print $1}')
     DISTRIB_RELEASE=$(echo $LIVECDLABEL | awk '{print $2}')
-    log_msg "Adding CD-ROM to source list"
     # ***rik: below sets environment variables in this script from lsb-release
     . /etc/lsb-release
 
