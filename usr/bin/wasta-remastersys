@@ -674,6 +674,10 @@ FOO
     mkdir -p $WORKDIR/ISOTMP/pool
     cd $WORKDIR/ISOTMP/pool
 
+    if [ -x /etc/"${BRAND_ETC}"/pool/ ]; then
+        cp -a /etc/"${BRAND_ETC}"/pool $WORKDIR/ISOTMP/
+    fi
+
     #if ANY package is unavailable, the whole block of downloads will fail.
     apt-get download -q \
         b43-fwcutter \
