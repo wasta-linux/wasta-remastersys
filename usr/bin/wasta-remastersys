@@ -459,6 +459,24 @@ FOO
     log_msg "Adding CD-ROM to source list"
     # ***rik: below sets environment variables in this script from lsb-release
     . /etc/lsb-release
+
+    if [ -e $WORKDIR/dummysys/etc/apt/sources.list.wasta ]; then
+        log_msg "Wasta-offline detected: use original sources.list"
+        mv $WORKDIR/dummysys/etc/apt/sources.list.wasta $WORKDIR/dummysys/etc/apt/sources.list
+    fi
+    if [ -x $WORKDIR/dummysys/etc/apt/sources.list.d.wasta/ ] \
+    && [ -x $WORKDIR/dummysys/etc/apt/sources.list.d/ ]; then
+        log_msg "Wasta-offline detected: use original sources.list.d"
+        mv $WORKDIR/dummysys/etc/apt/sources.list.d.wasta/* $WORKDIR/dummysys/etc/apt/sources.list.d/
+        rm -rf $WORKDIR/dummysys/etc/apt/sources.list.d.wasta
+    fi
+    if [ -x $WORKDIR/dummysys/var/lib/apt/lists.wasta/ ] \
+    && [ -x $WORKDIR/dummysys/var/lib/apt/lists/ ]; then
+        log_msg "Wasta-offline detected: use original apt/lists"
+        mv $WORKDIR/dummysys/var/lib/apt/lists.wasta/* $WORKDIR/dummysys/var/lib/apt/lists/
+        rm -rf $WORKDIR/dummysys/var/lib/apt/lists.wasta/
+        rm -f  $WORKDIR/dummysys/var/lib/apt/lists/"*_wasta-offline_*"
+    fi
     # ***rik: we remove any existing cdrom because casper auto mounts the cdrom from
     #         the livecd at boot time, so no need to manually add: manually adding
     #         also not supported because will get complaints that cdroms can only
