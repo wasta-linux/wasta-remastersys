@@ -723,31 +723,31 @@ FOO
     if [ ! -f /etc/"${BRAND_ETC}"/customisolinux/isolinux.cfg ]; then
         log_msg "Creating isolinux setup for the live system"
         find /usr -name 'isolinux.bin' -exec cp {} $WORKDIR/ISOTMP/isolinux/ \;
-        VESAMENU=$(find /usr -print0 | grep -EzZ --max-count=1 "bios/vesamenu.c32|syslinux/vesamenu.c32")
+        VESAMENU=$(find /usr -print0 | grep -EzZ --max-count=1 "bios/vesamenu.c32|syslinux/vesamenu.c32"| tr -d '\0')
         if [ -z "$VESAMENU" ]; then
             log_msg "   unable to find vesamenu.c32 - skipping"
         else
             cp $VESAMENU $WORKDIR/ISOTMP/isolinux/
         fi
-        LDLINUX=$(find /usr -print0 | grep -EzZ --max-count=1 "bios/ldlinux.c32|syslinux/ldlinux.c32")
+        LDLINUX=$(find /usr -print0 | grep -EzZ --max-count=1 "bios/ldlinux.c32|syslinux/ldlinux.c32"| tr -d '\0')
         if [ -z "$LDLINUX" ]; then
             log_msg "   unable to find ldlinux.c32 - skipping"
         else
             cp $LDLINUX $WORKDIR/ISOTMP/isolinux/
         fi
-        LIBUTIL=$(find /usr -print0 | grep -EzZ --max-count=1 "bios/libutil.c32|syslinux/libutil.c32")
+        LIBUTIL=$(find /usr -print0 | grep -EzZ --max-count=1 "bios/libutil.c32|syslinux/libutil.c32"| tr -d '\0')
         if [ -z "$LIBUTIL" ]; then
             log_msg "   unable to find libutil.c32 - skipping"
         else
             cp $LIBUTIL $WORKDIR/ISOTMP/isolinux/
         fi
-        LIBCOM=$(find /usr -print0 | grep -EzZ --max-count=1 "bios/libcom32.c32|syslinux/libcom32.c32")
+        LIBCOM=$(find /usr -print0 | grep -EzZ --max-count=1 "bios/libcom32.c32|syslinux/libcom32.c32"| tr -d '\0')
         if [ -z "$LIBCOM" ]; then
             log_msg "   unable to find libcom32.c32 - skipping"
         else
             cp $LIBCOM $WORKDIR/ISOTMP/isolinux/
         fi
-        MENU=$(find /usr -print0 | grep -EzZ --max-count=1 "bios/menu.c32|syslinux/menu.c32")
+        MENU=$(find /usr -print0 | grep -EzZ --max-count=1 "bios/menu.c32|syslinux/menu.c32" | tr -d '\0')
         if [ -z "$MENU" ]; then
             log_msg "   unable to find menu.c32 - skipping"
         else
