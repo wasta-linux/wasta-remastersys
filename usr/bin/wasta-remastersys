@@ -15,8 +15,7 @@
 #     confirmed on Cinnamon Mint Maya 13  (based on 12.04)
 #     confirmed on Cinnamon Mint 17.x,    Trusty 14.04
 #     confirmed on                        Xenial 16.04
-#
-# Notes: Ubuntu Precise - installer crashes with error near end.  unsupported.
+#     confirmed on                        Bionic 18.04
 #
 # 2017-06-10 rik: cleaned up apt-setup to ensure the livecd local packages
 #     are available offline install (needed for offline uefi installation)
@@ -474,7 +473,7 @@ FOO
         log_msg "Wasta-offline detected: use original apt/lists"
         mv $WORKDIR/dummysys/var/lib/apt/lists.wasta/* $WORKDIR/dummysys/var/lib/apt/lists/
         rm -rf $WORKDIR/dummysys/var/lib/apt/lists.wasta/
-        rm -f  $WORKDIR/dummysys/var/lib/apt/lists/"*_wasta-offline_*"
+        rm -f  $WORKDIR/dummysys/var/lib/apt/lists/*_wasta-offline_*
     fi
     # ***rik: we remove any existing cdrom because casper auto mounts the cdrom from
     #         the livecd at boot time, so no need to manually add: manually adding
