@@ -1,4 +1,4 @@
-wasta-remastersys (4.5.0.3) bionic; urgency=medium
+wasta-remastersys (4.5.0.4) bionic; urgency=medium
 
   * detect wasta-offline use and remove from configs
   * add ability to pre-define /pool/ .debs
