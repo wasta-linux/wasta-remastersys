@@ -414,6 +414,8 @@ rm -f /target/etc/mdm/mdm.conf
 #  The wasta-remastersys-firstboot script will later clean up.
 cp /etc/apt/sources.list /target/etc/apt/sources.list
 rsync -av /var/lib/apt/ /target/var/lib/apt/
+sleep 2
+exit 0
 FOO
     chmod 755 /usr/share/ubiquity/apt-setup
 
