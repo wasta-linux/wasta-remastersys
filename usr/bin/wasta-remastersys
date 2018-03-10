@@ -263,13 +263,6 @@ Press any key to continue and help design a fix...  " KEYSTROKE
 esac
 
 cdfs (){
-    log_msg "General space-saving clean-up of THIS COMPUTER before building"
-    log_msg "  Remove all old kernels" #(borrowed from PinguyBuilder 4.3.8)
-    dpkg -l 'linux-'{image,headers}'-[0-9]*' | sed '/^ii/!d;/'"$(uname -r | sed "s/\(.*\)-\([^0-9]\+\)/\1/")"'/d;s/^[^ ]* [^ ]* \([^ ]*\).*/\1/;/[0-9]/!d' | xargs apt-get -y purge
-    echo && echo
-    log_msg "  Remove all orphaned packages (autoremove)"
-    apt-get -y -q autoremove
-
     echo && echo
     log_msg "Enabling ${BRAND_INIT}-firstboot"
     chmod 755 /etc/init.d/"${BRAND_INIT}-firstboot"
@@ -361,6 +354,12 @@ cdfs (){
         apt-get -y -q install chntpw &> /dev/null
     fi
 
+    log_msg "General space-saving clean-up of THIS COMPUTER before building"
+    log_msg "  Remove all old kernels" #(borrowed from PinguyBuilder 4.3.8)
+    dpkg -l 'linux-'{image,headers}'-[0-9]*' | sed '/^ii/!d;/'"$(uname -r | sed "s/\(.*\)-\([^0-9]\+\)/\1/")"'/d;s/^[^ ]* [^ ]* \([^ ]*\).*/\1/;/[0-9]/!d' | xargs apt-get -y purge
+    echo && echo
+    log_msg "  Remove all orphaned packages (autoremove)"
+    apt-get -y -q autoremove
 
     # Check using lightdm and if it is setup properly for a live default session
     if [ "$(grep lightdm /etc/X11/default-display-manager)" != "" ]; then
