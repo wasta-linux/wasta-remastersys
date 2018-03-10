@@ -1,3 +1,9 @@
+wasta-remastersys (4.5.0.5) xenial; urgency=medium
+
+  * move apt cleanup AFTER ubiquity/boot-repair installs
+
+ -- Justin Luth <jluth@mail.com>  Sat, 10 Mar 2018 15:26:49 +0300
+
 wasta-remastersys (4.5.0.4) bionic; urgency=medium
 
   * detect wasta-offline use and remove from configs
