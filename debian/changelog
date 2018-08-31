@@ -1,3 +1,10 @@
+wasta-remastersys (4.5.0.6) bionic; urgency=medium
+
+  * add dkms to offline cache (needed by bcmwl-kernel-source)
+  * use GRUB_TIMEOUT_STYLE=hidden rather than GRUB_HIDDEN_TIMEOUT
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Fri, 31 Aug 2018 11:21:54 +0300
+
 wasta-remastersys (4.5.0.5) xenial; urgency=medium
 
   * move apt cleanup AFTER ubiquity/boot-repair installs

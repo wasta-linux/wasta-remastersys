@@ -12,14 +12,18 @@
 # Includes most code changes found in the forks Respin and Bodhibuilder
 #
 # This version was tested on variants of Ubuntu's Precise 12.04 and up
-#     confirmed on Cinnamon Mint Maya 13  (based on 12.04)
-#     confirmed on Cinnamon Mint 17.x,    Trusty 14.04
-#     confirmed on                        Xenial 16.04
-#     confirmed on                        Bionic 18.04
+#   - confirmed on Cinnamon Mint Maya 13  (based on 12.04)
+#   - confirmed on Cinnamon Mint 17.x,    Trusty 14.04
+#   - confirmed on                        Xenial 16.04
+#   - confirmed on                        Bionic 18.04
 #
 # 2017-06-10 rik: cleaned up apt-setup to ensure the livecd local packages
-#     are available offline install (needed for offline uefi installation)
+#   are available offline install (needed for offline uefi installation)
 #   - Offline Packages.gz was empty, correcting syntax to properly generate.
+# 2018-08-31 rik: setting GRUB_TIMEOUT_STYLE=hidden rather than using older
+#   method of setting GRUB_HIDDEN_TIMEOUT
+#   - add dkms to local repo downloads: needed to install bcmwl-kernel-source
+#   when offline.
 #
 # ==============================================================================
 
@@ -485,9 +489,9 @@ FOO
     #Copying grub config
     cp /etc/default/grub $WORKDIR/dummysys/etc/default/grub
 
-    # ***rik: default to no grub boot menu, I think ubiquity is smart enough
+    # ***rik: default to not show grub boot menu: ubiquity is smart enough
     #   to modify to show again if other OSs are detected
-    sed -i -e "s@.*\(GRUB_HIDDEN_TIMEOUT\)=.*@\1=0@" \
+    sed -i -e "s@.*\(GRUB_TIMEOUT_STYLE\)=.*@\1=hidden@" \
         $WORKDIR/dummysys/etc/default/grub
 
     sed -i -e "s@.*\(GRUB_DISTRIBUTOR\)=.*@\1=\"$LIVECDLABEL\"@" \
@@ -680,7 +684,8 @@ FOO
     #if ANY package is unavailable, the whole block of downloads will fail.
     apt-get download -q \
         b43-fwcutter \
-        bcmwl-kernel-source
+        bcmwl-kernel-source \
+        dkms
 
     apt-get download -q \
         efibootmgr \
