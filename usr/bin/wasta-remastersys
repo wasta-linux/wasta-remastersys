@@ -24,6 +24,18 @@
 #   method of setting GRUB_HIDDEN_TIMEOUT
 #   - add dkms to local repo downloads: needed to install bcmwl-kernel-source
 #   when offline.
+# 2018-09-27 rik: for Ubuntu 18.04 based distros, 2 fixes are required:
+#   1. /etc/default/grub GRUB_DISTRIBUTOR must have Ubuntu as the FIRST WORD.
+#      It seems that Ubuntu's grub is keying off of this word in order to
+#      create a /boot/efi/EFI/<word> folder. But at the same time, there is
+#      some hard-coded place in Ubuntu's grub that will only look at the
+#      /boot/efi/EFI/ubuntu folder when booting in EFI mode.
+#   2. After being identified as "Ubuntu", ubiquity will always attempt to
+#      run an apt_clone_restore function on a clean install which fails
+#      since nothing to restore. Other sources indicate that Ubuntu will be
+#      disabling this apt_clone_restore function because it has proven
+#      unreliable. So will disable here for all ISOs created with
+#      wasta-remastersys.
 #
 # ==============================================================================
 
@@ -98,7 +110,9 @@ if ! [ "$BACKUPSHOWINSTALL" == "0" -o "$BACKUPSHOWINSTALL" == "1" ]; then
     BACKUPSHOWINSTALL="1"
 fi
 
-#create ${BRAND_INIT}-firstboot script if it doesn't exist and populate with at least removal of the ubiquity*.desktop file from users Desktop and fix for recovery mode
+#create ${BRAND_INIT}-firstboot script if it doesn't exist and populate with at
+#   least removal of the ubiquity*.desktop file from users Desktop and fix for
+#   recovery mode
 fbtest=""
 [ -f /etc/init.d/"${BRAND_INIT}-firstboot" ] &&
     fbtest=$(grep "#REM4501" /etc/init.d/"${BRAND_INIT}-firstboot")
@@ -307,6 +321,13 @@ cdfs (){
         done
     fi
 
+    #rik: disable apt_clone_restore function: is not reliable and is wrongly
+    #   triggered by other patch to make sure that GRUB_DISTRIBUTOR first word
+    #   is 'Ubuntu' in order to ensure EFI installs will boot properly.
+    sed -i '\@#wasta:@d' /usr/share/ubiquity/plugininstall.py
+    sed -i -e 's@\(def apt_clone_restore(self).*\)@\1\n        return #wasta: apt_clone_restore process is unreliable@' \
+        /usr/share/ubiquity/plugininstall.py
+
     #Installing isolinux if needed
     log_msg "Making sure isolinux is installed"
     apt-get -y -q install isolinux syslinux-utils &> /dev/null
@@ -494,8 +515,16 @@ FOO
     sed -i -e "s@.*\(GRUB_TIMEOUT_STYLE\)=.*@\1=hidden@" \
         $WORKDIR/dummysys/etc/default/grub
 
-    sed -i -e "s@.*\(GRUB_DISTRIBUTOR\)=.*@\1=\"$LIVECDLABEL\"@" \
-        $WORKDIR/dummysys/etc/default/grub
+    #rik: If first word of GRUB_DISTRIBUTOR is not 'Ubuntu' there will be
+    #   EFI boot problems for Ubuntu 18.04 based ISOs.
+    if [[ $LIVECDLABEL != "Ubuntu "* ]];
+    then
+        sed -i -e "s@.*\(GRUB_DISTRIBUTOR\)=.*@\1=Ubuntu \"$LIVECDLABEL\"@" \
+            $WORKDIR/dummysys/etc/default/grub
+    else
+        sed -i -e "s@.*\(GRUB_DISTRIBUTOR\)=.*@\1=\"$LIVECDLABEL\"@" \
+            $WORKDIR/dummysys/etc/default/grub
+    fi
 
     log_msg "Cleaning up files not needed for the live cd in $WORKDIR/dummysys"
     rm -rf $WORKDIR/dummysys/etc/apt/sources.list.d/*.save &> /dev/null

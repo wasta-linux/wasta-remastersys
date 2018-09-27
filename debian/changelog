@@ -1,3 +1,20 @@
+wasta-remastersys (4.5.1) bionic; urgency=medium
+
+  * for Ubuntu 18.04 based distros, 2 fixes are required:
+    1. /etc/default/grub GRUB_DISTRIBUTOR must have Ubuntu as the FIRST WORD.
+       It seems that Ubuntu's grub is keying off of this word in order to
+       create a /boot/efi/EFI/<word> folder. But at the same time, there is
+       some hard-coded place in Ubuntu's grub that will only look at the
+       /boot/efi/EFI/ubuntu folder when booting in EFI mode.
+    2. After being identified as "Ubuntu", ubiquity will always attempt to
+       run an apt_clone_restore function on a clean install which fails
+       since nothing to restore. Other sources indicate that Ubuntu will be
+       disabling this apt_clone_restore function because it has proven
+       unreliable. So will disable here for all ISOs created with
+       wasta-remastersys.
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Thu, 27 Sep 2018 12:09:48 +0300
+
 wasta-remastersys (4.5.0.6) bionic; urgency=medium
 
   * add dkms to offline cache (needed by bcmwl-kernel-source)
