@@ -519,7 +519,7 @@ FOO
     #   EFI boot problems for Ubuntu 18.04 based ISOs.
     if [[ $LIVECDLABEL != "Ubuntu "* ]];
     then
-        sed -i -e "s@.*\(GRUB_DISTRIBUTOR\)=.*@\1=Ubuntu \"$LIVECDLABEL\"@" \
+        sed -i -e "s@.*\(GRUB_DISTRIBUTOR\)=.*@\1=\"Ubuntu $LIVECDLABEL\"@" \
             $WORKDIR/dummysys/etc/default/grub
     else
         sed -i -e "s@.*\(GRUB_DISTRIBUTOR\)=.*@\1=\"$LIVECDLABEL\"@" \
