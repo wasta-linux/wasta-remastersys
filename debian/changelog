@@ -1,3 +1,9 @@
+wasta-remastersys (4.5.2) bionic; urgency=medium
+
+  * os-prober: needs to "skip" optical media (iso9660) partitions
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Mon, 11 Mar 2019 09:18:09 +0300
+
 wasta-remastersys (4.5.1.1) bionic; urgency=medium
 
   * syntax cleanup for GRUB_DISTRIBUTOR sed

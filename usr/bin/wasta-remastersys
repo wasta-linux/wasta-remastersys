@@ -36,6 +36,9 @@
 #      disabling this apt_clone_restore function because it has proven
 #      unreliable. So will disable here for all ISOs created with
 #      wasta-remastersys.
+# 2019-03-11 rik: patching os-prober file so that update-grub will *not*
+#   attempt to install grub to the cdrom "optical disc" used for offline
+#   installs when in the live system (casper / ubiquity)
 #
 # ==============================================================================
 
@@ -327,6 +330,13 @@ cdfs (){
     sed -i '\@#wasta:@d' /usr/share/ubiquity/plugininstall.py
     sed -i -e 's@\(def apt_clone_restore(self).*\)@\1\n        return #wasta: apt_clone_restore process is unreliable@' \
         /usr/share/ubiquity/plugininstall.py
+
+    #rik: ensure os-prober ignores 'optical media' (iso9660) partitions
+    #   or else for UEFI installs during install update-grub will return an
+    #   error saying that grub can't be installed in the cdrom
+    log_msg "*** patching os-prober so update-grub will not return error during install"
+    PATCH_FILE=/etc/"${BRAND_ETC}"/patch/50mounted-tests-iso9660.patch
+    patch -Nu -r - /usr/lib/os-probes/50mounted-tests -i $PATCH_FILE
 
     #Installing isolinux if needed
     log_msg "Making sure isolinux is installed"
