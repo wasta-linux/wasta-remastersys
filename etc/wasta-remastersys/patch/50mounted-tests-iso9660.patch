@@ -1,0 +1,12 @@
+--- /usr/lib/os-probes/50mounted-tests	2017-03-07 00:54:47.000000000 +0300
++++ 50mounted-tests	2019-03-11 09:47:26.137065768 +0300
+@@ -32,6 +32,9 @@
+ elif [ "$types" = LVM2_member ]; then
+ 	debug "$1 is an LVM member; skipping"
+ 	exit 0
++elif [ "$types" = iso9660 ]; then
++	debug "$1 is an optical media iso9660 partition; skipping"
++	exit 0
+ elif [ "$types" = ntfs ]; then
+ 	if type ntfs-3g >/dev/null 2>&1; then
+ 		types='ntfs-3g ntfs'
