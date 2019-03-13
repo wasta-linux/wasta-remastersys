@@ -1,3 +1,9 @@
+wasta-remastersys (4.5.3) bionic; urgency=medium
+
+  * wasta-remastersys: ensure mokutil installed for secureboot compatibility
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Wed, 13 Mar 2019 13:48:32 +0300
+
 wasta-remastersys (4.5.2) bionic; urgency=medium
 
   * os-prober: needs to "skip" optical media (iso9660) partitions

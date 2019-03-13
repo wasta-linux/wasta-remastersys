@@ -39,6 +39,7 @@
 # 2019-03-11 rik: patching os-prober file so that update-grub will *not*
 #   attempt to install grub to the cdrom "optical disc" used for offline
 #   installs when in the live system (casper / ubiquity)
+# 2019-03-13 rik: ensuring mokutil is installed for secureboot compatiblity
 #
 # ==============================================================================
 
@@ -341,6 +342,16 @@ cdfs (){
     #Installing isolinux if needed
     log_msg "Making sure isolinux is installed"
     apt-get -y -q install isolinux syslinux-utils &> /dev/null
+
+    #rik: mokutil needs to be installed for grub-efi-amd64-signed to
+    #   install correctly during ubiquity install if installing with
+    #   secureboot enabled. No apparent negative if kept installed so
+    #   won't attempt to remove on legacy install
+    #NOTE: a patch to plugininstall.py or install.py was attempted to make
+    #   sure mokutil was installed before grub-efi-amd64-signed was installed
+    #   as part of ubiquity but I couldn't get this to work for now.
+    log_msg "Making sure mokutil is installed for secureboot compatibility"
+    apt-get -y -q install mokutil &> /dev/null
 
     #Installing boot-repair if not already installed
     if [ -x /usr/bin/boot-repair ];
@@ -751,6 +762,7 @@ FOO
     log_msg "  download efi helper files (optional - may not be available)"
     #example: not available in 12.04, so download separately
     apt-get download -q libefivar0
+    apt-get download -q libefivar1
     apt-get download -q mokutil
 
     mkdir -p $WORKDIR/ISOTMP/dists
