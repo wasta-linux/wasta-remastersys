@@ -1,3 +1,10 @@
+wasta-remastersys (4.5.4) bionic; urgency=medium
+
+  * partman: apply patch to ensure "/cdrom" device not considered for
+    installation
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Mon, 01 Apr 2019 23:02:14 +0300
+
 wasta-remastersys (4.5.3) bionic; urgency=medium
 
   * wasta-remastersys: ensure mokutil installed for secureboot compatibility

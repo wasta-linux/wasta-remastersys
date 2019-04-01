@@ -339,6 +339,14 @@ cdfs (){
     PATCH_FILE=/etc/"${BRAND_ETC}"/patch/50mounted-tests-iso9660.patch
     patch -Nu -r - /usr/lib/os-probes/50mounted-tests -i $PATCH_FILE
 
+    #rik: ensure partman doesn't consider any partitions on the /cdrom device
+    #   or else a large USB used for installing will have a large freespace
+    #   on it that will make ubiquity consider it for installing to and the
+    #   live usb will be corrupted
+    log_msg "*** patching partman so /cdrom will be removed as install option"
+    PATCH_FILE=/etc/"${BRAND_ETC}"/patch/30parted-remove-cdrom-drive.patch
+    patch -Nu -r - /lib/partman/init.d/30parted -i $PATCH_FILE
+
     #Installing isolinux if needed
     log_msg "Making sure isolinux is installed"
     apt-get -y -q install isolinux syslinux-utils &> /dev/null
