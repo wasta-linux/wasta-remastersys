@@ -40,6 +40,8 @@
 #   attempt to install grub to the cdrom "optical disc" used for offline
 #   installs when in the live system (casper / ubiquity)
 # 2019-03-13 rik: ensuring mokutil is installed for secureboot compatiblity
+# 2019-04-02 rik: patching partman so drive containing /cdrom won't be
+#   considered for install location
 #
 # ==============================================================================
 
@@ -343,8 +345,8 @@ cdfs (){
     #   or else a large USB used for installing will have a large freespace
     #   on it that will make ubiquity consider it for installing to and the
     #   live usb will be corrupted
-    log_msg "*** patching partman so /cdrom will be removed as install option"
-    PATCH_FILE=/etc/"${BRAND_ETC}"/patch/30parted-remove-cdrom-drive.patch
+    log_msg "*** patching partman so drive containing /cdrom won't be considered"
+    PATCH_FILE=/etc/"${BRAND_ETC}"/patch/30parted-remove-cdrom-device.patch
     patch -Nu -r - /lib/partman/init.d/30parted -i $PATCH_FILE
 
     #Installing isolinux if needed

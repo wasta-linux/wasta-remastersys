@@ -1,0 +1,77 @@
+--- /lib/partman/init.d/30parted	2019-02-04 19:13:42.000000000 +0300
++++ 30parted	2019-04-02 08:39:58.285025828 +0300
+@@ -181,7 +181,6 @@
+ 			free=0
+ 			parts=
+ 			instparts=
+-			seen_unmounted=
+ 			open_dialog PARTITIONS
+ 			while { read_line num id size type fs path name; [ "$id" ]; }; do
+ 				if [ "$fs" = free ]; then
+@@ -196,38 +195,41 @@
+ 				IFS="$NL"
+ 				for line in $mounts; do
+ 					restore_ifs
+-					if [ "$path" = "${line%% *}" ]; then
+-						mp="${line#* }"
+-						break
++					# for liveusb devices there are multiple partitions on
++					# the "/cdrom drive", but the full device (not a single
++					# partition) is identified as "/cdrom" so we need to strip
++					# the partition number and check the device itself
++					# to see if it is mounted as "/cdrom"
++					#
++					# later, "/cdrom" device will be removed from partman
++					# so not considered for installation
++					pathdevice=$(echo "$path" | sed s/[0-9]*//g)
++					mountpoint=${line#* }
++					if [ "$mountpoint" = "/cdrom" ]; then
++						# check full device against partman line
++						if [ "$pathdevice" = "${line%% *}" ]; then
++							instparts="${instparts:+$instparts }$path"
++							break
++						fi
++					else
++						# check partition against partman line
++						if [ "$path" = "${line%% *}" ]; then
++							parts="${parts:+$parts }$path"
++							break
++						fi
+ 					fi
+ 					IFS="$NL"
+ 				done
+ 				restore_ifs
+-				if [ "$mp" = /cdrom ]; then
+-					instparts="${instparts:+$instparts }$path"
+-				elif [ "$mp" ]; then
+-					parts="${parts:+$parts }$path"
+-				else
+-					seen_unmounted=1
+-				fi
+ 			done
+ 			close_dialog
+ 			if [ "$instparts" ]; then
+-				if [ -z "$seen_unmounted" ] && \
+-				   longint_le "$free" 16777216; then
+-					# The installation medium uses more
+-					# or less the whole disk.
+-					open_dialog CLOSE
+-					close_dialog
+-					cd /
+-					rm -rf "$dev"
+-				else
+-					# There's an installation medium
+-					# here, but it doesn't use the whole
+-					# disk.
+-					part_warn="$instparts"
+-					>installation_medium
+-				fi
++				# regardless of free size, drive containing "/cdrom" should
++				# NOT be considered for install: remove from partman
++				open_dialog CLOSE
++				close_dialog
++				cd /
++				rm -rf "$dev"
+ 			elif [ "$parts" ]; then
+ 				# Something other than an installation
+ 				# medium is mounted.

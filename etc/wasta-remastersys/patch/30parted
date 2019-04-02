@@ -181,7 +181,6 @@ if [ ! -f /var/run/parted_server.pid ]; then
 			free=0
 			parts=
 			instparts=
-			seen_unmounted=
 			open_dialog PARTITIONS
 			while { read_line num id size type fs path name; [ "$id" ]; }; do
 				if [ "$fs" = free ]; then
@@ -196,48 +195,41 @@ if [ ! -f /var/run/parted_server.pid ]; then
 				IFS="$NL"
 				for line in $mounts; do
 					restore_ifs
-					# for efi compatible bootable discs there are multiple
-					# partitions on the "/cdrom drive", so need to strip
+					# for liveusb devices there are multiple partitions on
+					# the "/cdrom drive", but the full device (not a single
+					# partition) is identified as "/cdrom" so we need to strip
 					# the partition number and check the device itself
 					# to see if it is mounted as "/cdrom"
 					#
-					# later, "/cdrom" will be removed from partman
+					# later, "/cdrom" device will be removed from partman
 					# so not considered for installation
 					pathdevice=$(echo "$path" | sed s/[0-9]*//g)
-					if [ "$pathdevice" = "${line%% *}" ]; then
-						mp="${line#* }"
-						break
+					mountpoint=${line#* }
+					if [ "$mountpoint" = "/cdrom" ]; then
+						# check full device against partman line
+						if [ "$pathdevice" = "${line%% *}" ]; then
+							instparts="${instparts:+$instparts }$path"
+							break
+						fi
+					else
+						# check partition against partman line
+						if [ "$path" = "${line%% *}" ]; then
+							parts="${parts:+$parts }$path"
+							break
+						fi
 					fi
 					IFS="$NL"
 				done
 				restore_ifs
-				if [ "$mp" = /cdrom ]; then
-					instparts="${instparts:+$instparts }$path"
-				elif [ "$mp" ]; then
-					parts="${parts:+$parts }$path"
-				else
-					seen_unmounted=1
-				fi
 			done
 			close_dialog
 			if [ "$instparts" ]; then
 				# regardless of free size, drive containing "/cdrom" should
-				# be removed
-				#if [ -z "$seen_unmounted" ] && \
-				#   longint_le "$free" 16777216; then
-					# The installation medium uses more
-					# or less the whole disk.
-					open_dialog CLOSE
-					close_dialog
-					cd /
-					rm -rf "$dev"
-				#else
-					# There's an installation medium
-					# here, but it doesn't use the whole
-					# disk.
-				#	part_warn="$instparts"
-				#	>installation_medium
-				#fi
+				# NOT be considered for install: remove from partman
+				open_dialog CLOSE
+				close_dialog
+				cd /
+				rm -rf "$dev"
 			elif [ "$parts" ]; then
 				# Something other than an installation
 				# medium is mounted.
