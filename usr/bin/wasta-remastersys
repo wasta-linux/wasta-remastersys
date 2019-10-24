@@ -121,7 +121,7 @@ fi
 #   recovery mode
 fbtest=""
 [ -f /etc/init.d/"${BRAND_INIT}-firstboot" ] &&
-    fbtest=$(grep "#REM4501" /etc/init.d/"${BRAND_INIT}-firstboot")
+    fbtest=$(grep "#REM4560" /etc/init.d/"${BRAND_INIT}-firstboot")
 
 if [ "$fbtest" == "" ]; then
     cat > /etc/init.d/"${BRAND_INIT}-firstboot" <<FOO
@@ -141,7 +141,7 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:/usr/local/sbin
 . /lib/lsb/init-functions
 
 do_start() {
-    #REM4501
+    #REM4560
     if [ "\$(cat /proc/cmdline | grep casper)" == "" ]; then
         [ "\$VERBOSE" != no ] && log_begin_msg "Running ${BRAND_INIT}-firstboot"
         (sleep 60 && update-rc.d -f ${BRAND_INIT}-firstboot remove) &
@@ -175,7 +175,7 @@ do_start() {
     else
         #17.10+ support: mark ubiquity.desktop as trusted executable.
         if [ $(which gio) ]; then
-          su $LIVEUSER -c 'gio set "/home/$LIVEUSER/Desktop/ubiquity.desktop" metadata::trusted yes'
+          su $LIVEUSER -c 'gio set "/home/$LIVEUSER/Desktop/ubiquity.desktop" metadata::trusted true'
         fi
     fi
 }
