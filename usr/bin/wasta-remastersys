@@ -336,18 +336,28 @@ cdfs (){
 
     #rik: ensure os-prober ignores 'optical media' (iso9660) partitions
     #   or else for UEFI installs during install update-grub will return an
-    #   error saying that grub can't be installed in the cdrom
-    log_msg "*** patching os-prober so update-grub will not return error during install"
+    #   error saying that grub can't be installed in the cdrom (18.04, 19.10)
     PATCH_FILE=/etc/"${BRAND_ETC}"/patch/50mounted-tests-iso9660.patch
-    patch -Nu -r - /usr/lib/os-probes/50mounted-tests -i $PATCH_FILE
+    patch --dry-run -Nu -r - /usr/lib/os-probes/50mounted-tests -i $PATCH_FILE &> /dev/null
+    if [[ $? == 0 ]]; then
+      log_msg "*** patching os-prober so update-grub will not return error during install"
+      patch -Nu -r - /usr/lib/os-probes/50mounted-tests -i $PATCH_FILE
+    else
+      log_msg "--- WARNING: skipping os-prober iso9660 failed patch. Check if new patch needed."
+    fi
 
     #rik: ensure partman doesn't consider any partitions on the /cdrom device
     #   or else a large USB used for installing will have a large freespace
     #   on it that will make ubiquity consider it for installing to and the
-    #   live usb will be corrupted
-    log_msg "*** patching partman so drive containing /cdrom won't be considered"
+    #   live usb will be corrupted (18.04)
     PATCH_FILE=/etc/"${BRAND_ETC}"/patch/30parted-remove-cdrom-device.patch
-    patch -Nu -r - /lib/partman/init.d/30parted -i $PATCH_FILE
+    patch  --dry-run -Nu -r - /lib/partman/init.d/30parted -i $PATCH_FILE &> /dev/null
+    if [[ $? == 0 ]]; then
+      log_msg "*** patching partman so drive containing /cdrom won't be considered"
+      patch -Nu -r - /lib/partman/init.d/30parted -i $PATCH_FILE
+    #else
+      #jcl: seems like this is fixed in 19.10 (from a code read), so keeping silent
+    fi
 
     #Installing isolinux if needed
     log_msg "Making sure isolinux is installed"
