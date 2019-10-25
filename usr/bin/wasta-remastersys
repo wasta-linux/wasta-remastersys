@@ -306,7 +306,7 @@ cdfs (){
 
     if [ -n "$SLIDESHOW" ]; then
         echo "installing the user selected slideshow $SLIDESHOW"
-        apt-get -y -q install ubiquity-slideshow-$SLIDESHOW
+        apt-get -y -q install ubiquity-slideshow-$SLIDESHOW --quiet --quiet
     fi
 
     # check whether system is gnome or kde based to load the correct frontend
