@@ -109,7 +109,7 @@ fi
 CDBOOTTYPE="ISOLINUX"
 
 if [ "$SQUASHFSOPTS" == "" ]; then
-    SQUASHFSOPTS="-no-recovery -always-use-fragments -b 1M -no-duplicates -comp xz"
+    SQUASHFSOPTS="-no-recovery -always-use-fragments -b 1M -comp xz"
 fi
 
 if ! [ "$BACKUPSHOWINSTALL" == "0" -o "$BACKUPSHOWINSTALL" == "1" ]; then
@@ -1047,8 +1047,13 @@ FOO
     #17.04+ defaults to having a swapfile instead of a swap partition. Exclude it.
     SWAPFILE="$(grep $' file\t' /proc/swaps | awk '{print $1}')"
 
-    mksquashfs $INCLUDES $REALFOLDERS $WORKDIR/ISOTMP/casper/filesystem.squashfs -no-duplicates $SQUASHFSOPTS -e root/.local/Trash root/.thumbnails root/.cache root/.bash_history root/.lesshst root/.nano_history /boot/efi/EFI /boot/grub $BASEWORKDIR $EXCLUDES $SWAPFILE 2>>$WORKDIR/"${BRAND_LOG}"
+    ROOT_MODE_OPT=""  #don't set root level permissions to 777 - only available in 4.4+. This benefits Calamares installer.
+    MKSQUASHFS_VERSION=$(mksquashfs -version | grep "mksquashfs version" | awk  '{print $3}')
+    if [ "$MKSQUASHFS_VERSION" ] && [ $(echo "$MKSQUASHFS_VERSION >= 4.4" | bc) -eq 1 ]; then
+        ROOT_MODE_OPT=" -root-mode 755"
+    fi
 
+    mksquashfs $INCLUDES $REALFOLDERS $WORKDIR/ISOTMP/casper/filesystem.squashfs -no-duplicates $ROOT_MODE_OPT $SQUASHFSOPTS -e root/.local/Trash root/.thumbnails root/.cache root/.bash_history root/.lesshst root/.nano_history /boot/efi/EFI /boot/grub $BASEWORKDIR $EXCLUDES $SWAPFILE 2>>$WORKDIR/"${BRAND_LOG}"
 
     sleep 1
 
@@ -1126,7 +1131,7 @@ FOO
 
     #checking the size of the compressed filesystem to ensure it meets the iso9660 spec for a single file
     SQUASHFSSIZE=$(ls -s $WORKDIR/ISOTMP/casper/filesystem.squashfs | awk -F " " '{print $1}')
-    if [ "$SQUASHFSSIZE" -gt "3999999" ]; then
+    if [ "$SQUASHFSSIZE" ] && [ "$SQUASHFSSIZE" -gt "3999999" ]; then
         log_msg "The compressed filesystem is larger than genisoimage allows for a single file. You must try to reduce the amount of data you are backing up and try again."
         exit 1
     fi

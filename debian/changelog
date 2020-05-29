@@ -1,3 +1,9 @@
+wasta-remastersys (4.5.7) focal; urgency=medium
+
+  * don't set root to 777 (since Calamares does not fix)
+
+ -- Justin Luth <jluth@mail.com>  Fri, 29 May 2020 15:13:17 +0300
+
 wasta-remastersys (4.5.6) eoan; urgency=medium
 
   * Eoan support: use metadata::trusted true instead of yes
