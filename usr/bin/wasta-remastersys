@@ -422,7 +422,7 @@ cdfs (){
 
     log_msg "General space-saving clean-up of THIS COMPUTER before building"
     log_msg "  Remove all old kernels" #(borrowed from PinguyBuilder 4.3.8)
-    dpkg -l 'linux-'{image,headers}'-[0-9]*' | sed '/^ii/!d;/'"$(uname -r | sed "s/\(.*\)-\([^0-9]\+\)/\1/")"'/d;s/^[^ ]* [^ ]* \([^ ]*\).*/\1/;/[0-9]/!d' | xargs apt-get -y purge
+    dpkg -l 'linux-'{image,headers,modules}'-[0-9]*' | sed '/^ii/!d;/'"$(uname -r | sed "s/\(.*\)-\([^0-9]\+\)/\1/")"'/d;s/^[^ ]* [^ ]* \([^ ]*\).*/\1/;/[0-9]/!d' | xargs apt-get -y purge
     echo && echo
     log_msg "  Remove all orphaned packages (autoremove)"
     apt-get -y -q autoremove
