@@ -1,3 +1,9 @@
+wasta-remastersys (4.5.8.1) focal; urgency=medium
+
+  * replace archdetect since not all ubuntu releases have archdetect-deb
+
+ -- Justin Luth <jluth@mail.com>  Thu, 05 Aug 2021 11:22:23 +0200
+
 wasta-remastersys (4.5.8) UNRELEASED; urgency=medium
 
   * also check linux-modules during cleanup to avoid -unsigned kernel

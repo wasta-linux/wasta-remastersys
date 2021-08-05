@@ -65,7 +65,9 @@ fi
 . /etc/"${BRAND_ETC}"/"${BRAND_NAME}.version"
 
 # Variables
-ARCH=$(archdetect | awk -F "/" '{print $1}')
+#ARCH formerly set by $(archdetect), but that is extra dependency.
+#     another alternative is $(dpkg-architecture -q DEB_BUILD_ARCH)
+ARCH=$(dpkg --print-architecture)  #provides the primary architecture
 
 # load the ${BRAND_NAME}.conf file
 . /etc/"${BRAND_ETC}"/"${BRAND_NAME}.conf"
