@@ -1163,9 +1163,12 @@ iso (){
     fi
 
     # rik: genisomage and mkisofs (from cdrtools) packages conflict with
-    #   eachother, so only one of them will be installed
-    GENISOIMAGE="$(which genisoimage)"
-    if [ "$GENISOIMAGE" ]; then
+    #   eachother, so only one of them will be installed.
+    # - Both packages provide mkisofs and genisoimage. By checking the version
+    #   of mkisofs it will report it is a dummy and installed by genisoimage
+    #   which we will use to indicate that it will not support >4GB size isos.
+    MKISO_GENISO="$(mkisofs --version | grep genisoimage)"
+    if [ "$MKISO_GENISO" ]; then
         # rik: 4GB single file size is a limitation of the genisoimage version of mkisofs
         #   but the cdrtools version of mkisofs allows it (but has slightly different
         #   parameters needed)
