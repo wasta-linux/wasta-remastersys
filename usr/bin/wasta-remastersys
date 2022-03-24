@@ -1129,12 +1129,15 @@ FOO
 
     sleep 1
 
+    # rik: 4GB single file size is a limitation of the genisoimage version of mkisofs
+    #   but the cdrtools version of mkisofs allows it (but has slightly different
+    #   parameters needed)
     #checking the size of the compressed filesystem to ensure it meets the iso9660 spec for a single file
-    SQUASHFSSIZE=$(ls -s $WORKDIR/ISOTMP/casper/filesystem.squashfs | awk -F " " '{print $1}')
-    if [ "$SQUASHFSSIZE" ] && [ "$SQUASHFSSIZE" -gt "3999999" ]; then
-        log_msg "The compressed filesystem is larger than genisoimage allows for a single file. You must try to reduce the amount of data you are backing up and try again."
-        exit 1
-    fi
+    #SQUASHFSSIZE=$(ls -s $WORKDIR/ISOTMP/casper/filesystem.squashfs | awk -F " " '{print $1}')
+    #if [ "$SQUASHFSSIZE" ] && [ "$SQUASHFSSIZE" -gt "3999999" ]; then
+    #    log_msg "The compressed filesystem is larger than genisoimage allows for a single file. You must try to reduce the amount of data you are backing up and try again."
+    #    exit 1
+    #fi
 
     #add filesystem size for lucid
     log_msg "Calculating the installed filesystem size for the installer"
@@ -1150,22 +1153,30 @@ FOO
 }
 
 iso (){
-
     CREATEISO="$(which mkisofs)"
     if [ "$CREATEISO" == "" ]; then
         CREATEISO="$(which genisoimage)"
+    fi
+
+    # rik: genisomage and mkisofs (from cdrtools) packages conflict with
+    #   eachother, so only one of them will be installed
+    GENISOIMAGE="$(which genisoimage)"
+    if [ "$GENISOIMAGE" ]; then
+        # rik: 4GB single file size is a limitation of the genisoimage version of mkisofs
+        #   but the cdrtools version of mkisofs allows it (but has slightly different
+        #   parameters needed)
+        SQUASHFSSIZE=$(ls -s $WORKDIR/ISOTMP/casper/filesystem.squashfs | awk -F " " '{print $1}')
+        if [ "$SQUASHFSSIZE" -gt "3999999" ]; then
+            log_msg "The genisoimage version of mkisofs is installed. Ths version only allows files less than 4GB to be included in the ISO."
+            log_msg "The compressed filesystem size is $SQUASFSIZE. You must try to reduce the amount of data you are backing up and try again."
+            exit 1
+        fi
     fi
 
     # check to see if the cd filesystem exists
 
     if [ ! -f $WORKDIR/ISOTMP/casper/filesystem.squashfs ]; then
         log_msg "The filesystem.squashfs filesystem is missing.  Either there was a problem creating the compressed filesystem or you are trying to run sudo ${BRAND_BIN} dist iso before sudo ${BRAND_BIN} dist cdfs"
-        exit 1
-    fi
-
-    SQUASHFSSIZE=$(ls -s $WORKDIR/ISOTMP/casper/filesystem.squashfs | awk -F " " '{print $1}')
-    if [ "$SQUASHFSSIZE" -gt "3999999" ]; then
-        log_msg "The compressed filesystem is larger than genisoimage allows for a single file. You must try to reduce the amount of data you are backing up and try again."
         exit 1
     fi
 
@@ -1198,10 +1209,18 @@ iso (){
     log_msg "Creating $CUSTOMISO in $WORKDIR"
     ALT_BOOT=""
     if [ -e boot/grub/efi.img ]; then
-        ALT_BOOT="-eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot"
+        if [ "$GENISOIMAGE" ]; then
+            # rik: genisoimage mkisofs efi parameters
+            ALT_BOOT="-eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot"
+        else
+            # rik: cdrtools mkisofs efi parameters
+            ALT_BOOT="-eltorito-alt-boot -eltorito-platform efi -b boot/grub/efi.img -no-emul-boot"
+        fi
     else
         log_msg "   Warning: boot/grub/efi.img is missing!! Skipping EFI boot."
     fi
+
+
     $CREATEISO -iso-level 3 -quiet -r -V "$(echo $LIVECDLABEL | cut -c -32)" -cache-inodes -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table ${ALT_BOOT} -o $WORKDIR/$CUSTOMISO $WORKDIR/ISOTMP &>>$WORKDIR/"${BRAND_LOG}"
 
     if [ ! -f $WORKDIR/$CUSTOMISO ]; then
