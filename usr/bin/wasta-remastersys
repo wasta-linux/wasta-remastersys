@@ -44,6 +44,8 @@
 #   considered for install location
 # 2022-03-24 rik: account for different versions of mkisofs. The cdrtools
 #   version allows files > 4GB in the ISO!
+# 2023-01-04 rik: correct sed command on backup
+#   - exclude /efi and /EFI on ISO creation
 #
 # ==============================================================================
 
@@ -920,7 +922,7 @@ FOO
                 #17.10+ support: mark ubiquity.desktop as trusted executable.
                 sed -i \
                     -e "\|ubiquity.desktop| s|su .* -c|su $LIVEUSER -c|" \
-                    -e "\|ubiquity.desktop| s|/home/[^/]+/|/$LIVEHOME/|" \
+                    -e "\|ubiquity.desktop| s|/home/[^/]\+/|/$LIVEHOME/|" \
                   /etc/init.d/"${BRAND_INIT}-firstboot"
             fi
         fi
@@ -1057,7 +1059,7 @@ FOO
         ROOT_MODE_OPT=" -root-mode 755"
     fi
 
-    mksquashfs $INCLUDES $REALFOLDERS $WORKDIR/ISOTMP/casper/filesystem.squashfs -no-duplicates $ROOT_MODE_OPT $SQUASHFSOPTS -e root/.local/Trash root/.thumbnails root/.cache root/.bash_history root/.lesshst root/.nano_history /boot/efi/EFI /boot/grub $BASEWORKDIR $EXCLUDES $SWAPFILE 2>>$WORKDIR/"${BRAND_LOG}"
+    mksquashfs $INCLUDES $REALFOLDERS $WORKDIR/ISOTMP/casper/filesystem.squashfs -no-duplicates $ROOT_MODE_OPT $SQUASHFSOPTS -e root/.local/Trash root/.thumbnails root/.cache root/.bash_history root/.lesshst root/.nano_history /boot/efi/EFI /boot/grub /efi /EFI $BASEWORKDIR $EXCLUDES $SWAPFILE 2>>$WORKDIR/"${BRAND_LOG}"
 
     sleep 1
 
