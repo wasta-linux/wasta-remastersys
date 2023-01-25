@@ -46,6 +46,7 @@
 #   version allows files > 4GB in the ISO!
 # 2023-01-04 rik: correct sed command on backup
 #   - exclude /efi and /EFI on ISO creation
+# 2023-01-25 rik: cleanup removal of /etc/X11/xorg.conf.d
 #
 # ==============================================================================
 
@@ -582,7 +583,8 @@ FOO
     rm -rf $WORKDIR/dummysys/var/cache/apt/archives/* &> /dev/null
     rm -rf $WORKDIR/dummysys/var/lib/ureadahead/pack &> /dev/null
     rm -f $WORKDIR/dummysys/var/lib/update-notifier/user.d/* &> /dev/null
-    rm -f $WORKDIR/dummysys/etc/X11/xorg.conf*
+    rm -f $WORKDIR/dummysys/etc/X11/xorg.conf* &> /dev/null
+    rm -f $WORKDIR/dummysys/etc/X11/xorg.conf.d/* &> /dev/null
 #    rm -f $WORKDIR/dummysys/etc/ timezone
     rm -f $WORKDIR/dummysys/etc/{hosts,hostname,mtab*,fstab}
     if [ ! -L $WORKDIR/dummysys/etc/resolv.conf ]; then
