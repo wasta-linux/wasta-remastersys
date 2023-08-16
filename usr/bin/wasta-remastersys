@@ -47,6 +47,7 @@
 # 2023-01-04 rik: correct sed command on backup
 #   - exclude /efi and /EFI on ISO creation
 # 2023-01-25 rik: cleanup removal of /etc/X11/xorg.conf.d
+# 2023-08-16 rik: remove flatpak and snap cache
 #
 # ==============================================================================
 
@@ -615,7 +616,9 @@ FOO
         rm -rf $WORKDIR/dummysys/var/cache/gdm/*
         rm -rf $WORKDIR/dummysys/var/lib/sudo/*
         rm -rf $WORKDIR/dummysys/var/lib/AccountsService/users/*
+        rm -rm $WORKDIR/dummysys/var/lib/flatpak/.removed/*
         rm -rf $WORKDIR/dummysys/var/lib/kdm/*
+        rm -rm $WORKDIR/dummysys/var/lib/snapd/cache/*
         rm -rf $WORKDIR/dummysys/var/run/console/*
 
         rm -f $WORKDIR/dummysys/etc/gdm/gdm.conf-custom
