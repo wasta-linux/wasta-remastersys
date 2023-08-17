@@ -1,3 +1,9 @@
+wasta-remastersys (4.6.2) jammy; urgency=medium
+
+  * syntax fix: rm -rf not rm -rm :-)
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Thu, 17 Aug 2023 15:12:18 -0500
+
 wasta-remastersys (4.6.1) jammy; urgency=medium
 
   * remove snap and flatpak cache, update splash.png

@@ -616,9 +616,9 @@ FOO
         rm -rf $WORKDIR/dummysys/var/cache/gdm/*
         rm -rf $WORKDIR/dummysys/var/lib/sudo/*
         rm -rf $WORKDIR/dummysys/var/lib/AccountsService/users/*
-        rm -rm $WORKDIR/dummysys/var/lib/flatpak/.removed/*
+        rm -rf $WORKDIR/dummysys/var/lib/flatpak/.removed/*
         rm -rf $WORKDIR/dummysys/var/lib/kdm/*
-        rm -rm $WORKDIR/dummysys/var/lib/snapd/cache/*
+        rm -rf $WORKDIR/dummysys/var/lib/snapd/cache/*
         rm -rf $WORKDIR/dummysys/var/run/console/*
 
         rm -f $WORKDIR/dummysys/etc/gdm/gdm.conf-custom
