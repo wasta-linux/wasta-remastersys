@@ -1059,8 +1059,10 @@ FOO
     SWAPFILE="$(grep $' file\t' /proc/swaps | awk '{print $1}')"
 
     ROOT_MODE_OPT=""  #don't set root level permissions to 777 - only available in 4.4+. This benefits Calamares installer.
-    MKSQUASHFS_VERSION=$(mksquashfs -version | grep "mksquashfs version" | awk  '{print $3}')
-    if [ "$MKSQUASHFS_VERSION" ] && [ $(echo "$MKSQUASHFS_VERSION >= 4.4" | bc) -eq 1 ]; then
+    #get major and minor version only because bc requires a valid number. (4.6.1 would not work, so just use 4.6)
+    MKSQUASHFS_VERSION=$(mksquashfs -version | grep "mksquashfs version" | awk  '{print $3}' | awk -F. '{printf "%d.%02d\n",$1,$2}')
+    #represent 4.4 as 4.04 to allow minor versions up to 99
+    if [ "$MKSQUASHFS_VERSION" ] && [ $(echo "$MKSQUASHFS_VERSION >= 4.04" | bc) -eq 1 ]; then
         ROOT_MODE_OPT=" -root-mode 755"
     fi
 
