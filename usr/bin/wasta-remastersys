@@ -1177,7 +1177,7 @@ iso (){
     #   of mkisofs it will report it is a dummy and installed by genisoimage
     #   which we will use to indicate that it will not support >4GB size isos.
     MKISO_GENISO="$(mkisofs --version | grep genisoimage)"
-    if [ "$MKISO_GENISO" ]; then
+    if [ "$MKISO_GENISO" ] && [ -f $WORKDIR/ISOTMP/casper/filesystem.squashfs ]; then
         # rik: 4GB single file size is a limitation of the genisoimage version of mkisofs
         #   but the cdrtools version of mkisofs allows it (but has slightly different
         #   parameters needed)
@@ -1225,7 +1225,7 @@ iso (){
     log_msg "Creating $CUSTOMISO in $WORKDIR"
     ALT_BOOT=""
     if [ -e boot/grub/efi.img ]; then
-        if [ "$GENISOIMAGE" ]; then
+        if [ "$MKISO_GENISO" ]; then
             # rik: genisoimage mkisofs efi parameters
             ALT_BOOT="-eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot"
         else
