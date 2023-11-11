@@ -1184,7 +1184,7 @@ iso (){
         SQUASHFSSIZE=$(ls -s $WORKDIR/ISOTMP/casper/filesystem.squashfs | awk -F " " '{print $1}')
         if [ "$SQUASHFSSIZE" -gt "3999999" ]; then
             log_msg "The genisoimage version of mkisofs is installed. This version only allows files less than 4GB to be included in the ISO."
-            log_msg "The compressed filesystem size is $SQUASFSIZE. You must try to reduce the amount of data you are backing up and try again."
+            log_msg "The compressed filesystem size is $SQUASHFSSIZE. You must try to reduce the amount of data you are backing up and try again."
             exit 1
         fi
     fi
