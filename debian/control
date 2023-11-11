@@ -2,8 +2,8 @@ Source: wasta-remastersys
 Section: utils
 Priority: optional
 Maintainer: Rik Shaw <rikshaw76@gmail.com>
-Build-Depends: debhelper (>= 9.0.0)
-Standards-Version: 3.9.7
+Build-Depends: debhelper-compat (=12), debhelper (>= 12.0.0)
+Standards-Version: 4.6.2
 Homepage: https://github.com/wasta-linux/wasta-remastersys
 
 Package: wasta-remastersys
