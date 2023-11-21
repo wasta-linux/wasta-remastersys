@@ -57,6 +57,22 @@ if [ "$(whoami)" != "root" ]; then
     exit 1
 fi
 
+# warn if likely to fail: overly large installation? (4GB max with genisoimage)
+MKISO_GENISO="$(mkisofs --version | grep genisoimage)"
+if [ "$MKISO_GENISO" ] && [ $(which snap) ]; then
+    # if snaps are installed (like base/core), likely the filesystem.squashfs
+    # will exceed the size limit for a single file on the ISO,
+    # so warn the user and allow them to pause and "take care of the problem".
+    WARN_SNAPS=$(snap list | awk '!/Name/{print $1}' | grep '^core[0-9]\+\?$')
+    if [ "${WARN_SNAPS}" ]; then
+        echo "You are limited to a 4GB ISO and yet you have snaps installed!"
+        read -p "Are you sure you want to continue? (Y/n) " WARN_SNAPS
+        if [ "${WARN_SNAPS^^}" == "N" ]; then
+            exit 1
+        fi
+    fi
+fi
+
 BRANDING="wasta-remastersys"
 BRAND_NAME="${BRANDING}"
 BRAND_BIN="${BRANDING}"
@@ -1176,7 +1192,6 @@ iso (){
     # - Both packages provide mkisofs and genisoimage. By checking the version
     #   of mkisofs it will report it is a dummy and installed by genisoimage
     #   which we will use to indicate that it will not support >4GB size isos.
-    MKISO_GENISO="$(mkisofs --version | grep genisoimage)"
     if [ "$MKISO_GENISO" ] && [ -f $WORKDIR/ISOTMP/casper/filesystem.squashfs ]; then
         # rik: 4GB single file size is a limitation of the genisoimage version of mkisofs
         #   but the cdrtools version of mkisofs allows it (but has slightly different
