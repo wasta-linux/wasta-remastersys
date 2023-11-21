@@ -73,6 +73,19 @@ if [ "$MKISO_GENISO" ] && [ $(which snap) ]; then
     fi
 fi
 
+# calamares is an alternative, generic installer.
+USE_ONLY_CALAMARES=N
+CALAMARESDESKTOP=""
+if [ $(which calamares) ]; then
+    # Usually calamares-settings-* includes a customized menu item.
+    # If not, fall back to the generic "Install System" icon.
+    CALAMARESDESKTOP=$(find /usr -name *-calamares.desktop | head -1)
+    if [ -z "$CALAMARESDESKTOP" ]; then
+        CALAMARESDESKTOP=$(find /usr -name calamares.desktop | head -1)
+    fi
+    read -p "Calamares installer is installed. Avoid the ubiquity installer? (Y/n) " USE_ONLY_CALAMARES
+fi
+
 BRANDING="wasta-remastersys"
 BRAND_NAME="${BRANDING}"
 BRAND_BIN="${BRANDING}"
@@ -172,6 +185,9 @@ do_start() {
         sed -i -e 's/root:x:/root:!:/g' /etc/shadow
         apt-get remove -q -y ubiquity &> /dev/null
         rm -rf /home/*/Desktop/ubiquity*.desktop
+        if [ "${USE_ONLY_CALAMARES^^}" == "N" ]; then
+            apt-get remove -q -y calamares &> /dev/null
+        fi
 
         # NeoRouter: clear config
         rm -f /usr/local/ZebraNetworkSystems/NeoRouter/Client.xml &> /dev/null
@@ -197,9 +213,15 @@ do_start() {
         apt-get autoremove -y -q &> /dev/null
         return \$ES
     else
+        if [ -f "$CALAMARESDESKTOP" ]; then
+            install -D -o $LIVEUSER  "$CALAMARESDESKTOP" "/home/$LIVEUSER/Desktop/calamares.desktop"
+            chmod +x /home/$LIVEUSER/Desktop/calamares.desktop
+        fi
+
         #17.10+ support: mark ubiquity.desktop as trusted executable.
         if [ $(which gio) ]; then
           su $LIVEUSER -c 'gio set "/home/$LIVEUSER/Desktop/ubiquity.desktop" metadata::trusted true'
+          su $LIVEUSER -c 'gio set "/home/$LIVEUSER/Desktop/calamares.desktop" metadata::trusted true'
         fi
     fi
 }
@@ -328,35 +350,36 @@ cdfs (){
     log_msg "Making sure syslinux-themes is not installed"
     apt-get -y -q purge syslinux-themes* &> /dev/null
 
-    if [ -n "$SLIDESHOW" ]; then
-        echo "installing the user selected slideshow $SLIDESHOW"
-        apt-get -y -q install ubiquity-slideshow-$SLIDESHOW --quiet --quiet
+    if [ "${USE_ONLY_CALAMARES^^}" == "N" ]; then
+        if [ -n "$SLIDESHOW" ]; then
+	    echo "installing the user selected slideshow $SLIDESHOW"
+	    apt-get -y -q install ubiquity-slideshow-$SLIDESHOW --quiet --quiet
+        fi
+
+        # check whether system is gnome or kde based to load the correct frontend
+        if [ "$(ps axf | grep startkde | grep -v grep)" != "" -o "$(ps axf | grep kwin | grep -v grep)" != "" ]; then
+            log_msg "Installing the Ubiquity KDE frontend"
+            apt-get -y -q install ubiquity-frontend-kde &> /dev/null
+            apt-get -y -q remove ubiquity-frontend-gtk &> /dev/null
+        else
+            log_msg "Installing the Ubiquity GTK frontend"
+            apt-get -y -q install --quiet ubiquity-frontend-gtk &> /dev/null
+            apt-get -y -q remove ubiquity-frontend-kde &> /dev/null
+            until [ -e /usr/lib/ubiquity/ubiquity/frontend/gtk_ui.py ]; do
+                log_msg "reattempting to install ubiquity-frontend-gtk..."
+                sleep 2
+                apt-get update  &> /dev/null
+                apt-get -y -q install ubiquity-frontend-gtk &> /dev/null
+            done
+        fi
+
+        #rik: disable apt_clone_restore function: is not reliable and is wrongly
+        #   triggered by other patch to make sure that GRUB_DISTRIBUTOR first word
+        #   is 'Ubuntu' in order to ensure EFI installs will boot properly.
+        sed -i '\@#wasta:@d' /usr/share/ubiquity/plugininstall.py
+        sed -i -e 's@\(def apt_clone_restore(self).*\)@\1\n        return #wasta: apt_clone_restore process is unreliable@' \
+            /usr/share/ubiquity/plugininstall.py
     fi
-
-    # check whether system is gnome or kde based to load the correct frontend
-
-    if [ "$(ps axf | grep startkde | grep -v grep)" != "" -o "$(ps axf | grep kwin | grep -v grep)" != "" ]; then
-        log_msg "Installing the Ubiquity KDE frontend"
-        apt-get -y -q install ubiquity-frontend-kde &> /dev/null
-        apt-get -y -q remove ubiquity-frontend-gtk &> /dev/null
-    else
-        log_msg "Installing the Ubiquity GTK frontend"
-        apt-get -y -q install --quiet ubiquity-frontend-gtk &> /dev/null
-        apt-get -y -q remove ubiquity-frontend-kde &> /dev/null
-        until [ -e /usr/lib/ubiquity/ubiquity/frontend/gtk_ui.py ]; do
-            log_msg "reattempting to install ubiquity-frontend-gtk..."
-            sleep 2
-            apt-get update  &> /dev/null
-            apt-get -y -q install ubiquity-frontend-gtk &> /dev/null
-        done
-    fi
-
-    #rik: disable apt_clone_restore function: is not reliable and is wrongly
-    #   triggered by other patch to make sure that GRUB_DISTRIBUTOR first word
-    #   is 'Ubuntu' in order to ensure EFI installs will boot properly.
-    sed -i '\@#wasta:@d' /usr/share/ubiquity/plugininstall.py
-    sed -i -e 's@\(def apt_clone_restore(self).*\)@\1\n        return #wasta: apt_clone_restore process is unreliable@' \
-        /usr/share/ubiquity/plugininstall.py
 
     #rik: ensure os-prober ignores 'optical media' (iso9660) partitions
     #   or else for UEFI installs during install update-grub will return an
@@ -472,12 +495,13 @@ cdfs (){
         fi
     fi
 
-    # prevent the installer from changing the apt sources.list
-    if [ ! -f "/usr/share/ubiquity/apt-setup.save" ]; then
-        cp /usr/share/ubiquity/apt-setup /usr/share/ubiquity/apt-setup.save
-    fi
+    if [ "${USE_ONLY_CALAMARES^^}" == "N" ]; then
+        # prevent the installer from changing the apt sources.list
+        if [ ! -f "/usr/share/ubiquity/apt-setup.save" ]; then
+            cp /usr/share/ubiquity/apt-setup /usr/share/ubiquity/apt-setup.save
+        fi
 
-    cat > /usr/share/ubiquity/apt-setup <<FOO
+        cat > /usr/share/ubiquity/apt-setup <<FOO
 #!/bin/bash
 
 # ${BRAND_NAME} custom apt-setup
@@ -506,7 +530,8 @@ rsync -av /var/lib/apt/ /target/var/lib/apt/
 sleep 2
 exit 0
 FOO
-    chmod 755 /usr/share/ubiquity/apt-setup
+        chmod 755 /usr/share/ubiquity/apt-setup
+    fi
 
     sleep 1
 
@@ -618,7 +643,8 @@ FOO
     find $WORKDIR/dummysys/var/tmp/ -type f -exec rm -f {} \;
     [ -d $WORKDIR/dummysys/var/crash/ ] &&
         find $WORKDIR/dummysys/var/crash/ -type f -exec rm -f {} \;
-    find $WORKDIR/dummysys/var/lib/ubiquity/ -type f -exec rm -f {} \;
+    [ -d $WORKDIR/dummysys/var/lib/ubiquity/ ] &&
+        find $WORKDIR/dummysys/var/lib/ubiquity/ -type f -exec rm -f {} \;
 
     if [ "$1" == "dist" ]; then
 
@@ -933,7 +959,7 @@ FOO
             # copy the install icon to the sudo users desktop
             log_msg "Copying the install icon to the desktop of $LIVEUSER"
             UBIQUITYDESKTOP=$(find /usr -name ubiquity*.desktop | head -1)
-            if [ "$UBIQUITYDESKTOP" ]; then
+            if [ "$UBIQUITYDESKTOP" ] && [ "${USE_ONLY_CALAMARES^^}" == "N" ]; then
                 install -d -o $LIVEUSER -g $LIVEUSER $LIVEHOME/Desktop &> /dev/null
                 install -D -o $LIVEUSER -g $LIVEUSER $UBIQUITYDESKTOP $LIVEHOME/Desktop/ &> /dev/null
                 #casper modifier used to change desktop installer name
