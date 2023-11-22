@@ -16,6 +16,9 @@
 #   - confirmed on Cinnamon Mint 17.x,    Trusty 14.04
 #   - confirmed on                        Xenial 16.04
 #   - confirmed on                        Bionic 18.04
+#   - confirmed on                        Focal  20.04
+#   - confirmed on                        Jammy  22.04
+#   - confirmed on                        Noble  24.04
 #
 # 2017-06-10 rik: cleaned up apt-setup to ensure the livecd local packages
 #   are available offline install (needed for offline uefi installation)

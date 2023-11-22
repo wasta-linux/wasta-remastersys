@@ -1,3 +1,10 @@
+wasta-remastersys (4.6.4) noble; urgency=medium
+
+  * make wasta-remastersys calamares aware
+  * warn if snaps are installed (if likely 4GB limit will be hit)
+
+ -- Justin Luth <jluth@mail.com>  Wed, 22 Nov 2023 10:57:53 -0500
+
 wasta-remastersys (4.6.3) jammy; urgency=medium
 
   * fix x.y.z version comparison
