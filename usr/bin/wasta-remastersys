@@ -186,6 +186,10 @@ do_start() {
         [ "\$VERBOSE" != no ] && log_begin_msg "Running ${BRAND_INIT}-firstboot"
         (sleep 60 && update-rc.d -f ${BRAND_INIT}-firstboot remove) &
         sed -i -e 's/root:x:/root:!:/g' /etc/shadow
+
+        # ensure cryptsetup/lvm2 are not orphaned and removed by autoremove after ubiquity is removed
+        apt-get -y -q install cryptsetup lvm2 &> /dev/null  #marks as manually installed
+
         apt-get remove -q -y ubiquity &> /dev/null
         rm -rf /home/*/Desktop/ubiquity*.desktop
         if [ "${USE_ONLY_CALAMARES^^}" == "N" ]; then
@@ -358,6 +362,9 @@ cdfs (){
 	    echo "installing the user selected slideshow $SLIDESHOW"
 	    apt-get -y -q install ubiquity-slideshow-$SLIDESHOW --quiet --quiet
         fi
+
+        # install cryptsetup/lvm2 separately, so they don't get orphaned by removing ubiquity
+        apt-get -y -q install cryptsetup lvm2 &> /dev/null
 
         # check whether system is gnome or kde based to load the correct frontend
         if [ "$(ps axf | grep startkde | grep -v grep)" != "" -o "$(ps axf | grep kwin | grep -v grep)" != "" ]; then
