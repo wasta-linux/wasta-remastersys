@@ -45,7 +45,7 @@ terminal-border: "0"
   color = "#ffffff"
 }
 
-# Navigation keys hint 
+# Navigation keys hint
 + label {
   left = 0
   top = 100%-24

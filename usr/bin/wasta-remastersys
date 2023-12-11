@@ -190,10 +190,10 @@ do_start() {
         # ensure cryptsetup/lvm2 are not orphaned and removed by autoremove after ubiquity is removed
         apt-get -y -q install cryptsetup lvm2 &> /dev/null  #marks as manually installed
 
-        apt-get remove -q -y ubiquity &> /dev/null
+        apt-get -y -q remove ubiquity &> /dev/null
         rm -rf /home/*/Desktop/ubiquity*.desktop
         if [ "${USE_ONLY_CALAMARES^^}" == "N" ]; then
-            apt-get remove -q -y calamares &> /dev/null
+            apt-get -y -q remove calamares &> /dev/null
         fi
 
         # NeoRouter: clear config
@@ -359,8 +359,8 @@ cdfs (){
 
     if [ "${USE_ONLY_CALAMARES^^}" == "N" ]; then
         if [ -n "$SLIDESHOW" ]; then
-	    echo "installing the user selected slideshow $SLIDESHOW"
-	    apt-get -y -q install ubiquity-slideshow-$SLIDESHOW --quiet --quiet
+            echo "installing the user selected slideshow $SLIDESHOW"
+            apt-get -y -q install ubiquity-slideshow-$SLIDESHOW --quiet --quiet
         fi
 
         # install cryptsetup/lvm2 separately, so they don't get orphaned by removing ubiquity
@@ -841,7 +841,7 @@ FOO
             grub-efi-amd64-signed
     fi
 
-    #libefivar0 and mokutil added by Pinguy in 4.3?  
+    #libefivar0 and mokutil added by Pinguy in 4.3?
     log_msg "  download efi helper files (optional - may not be available)"
     #example: not available in 12.04, so download separately
     apt-get download -q libefivar0
