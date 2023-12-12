@@ -1,3 +1,9 @@
+wasta-remastersys (4.7.1) noble; urgency=medium
+
+  * bump version to try and get launchpad to accept changes
+
+ -- Justin Luth <jluth@mail.com>  Tue, 12 Dec 2023 12:57:53 -0500
+
 wasta-remastersys (4.7.0) noble; urgency=medium
 
   * avoid orphaning cryptsetup when ubiquity is removed
