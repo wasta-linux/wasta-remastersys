@@ -51,6 +51,7 @@
 #   - exclude /efi and /EFI on ISO creation
 # 2023-01-25 rik: cleanup removal of /etc/X11/xorg.conf.d
 # 2023-08-16 rik: remove flatpak and snap cache
+# 2024-06-12 rik: changing fallback uid to 994, adding 24.04 libefivar1t64
 #
 # ==============================================================================
 
@@ -770,18 +771,19 @@ FOO
     [ "$1" == "backup" ] && [ -d $WORKDIR/dummysys/home ] && rm -rf $WORKDIR/dummysys/home
     [ "$1" == "backup" ] && chmod 644 /usr/share/initramfs-tools/scripts/casper-bottom/*adduser /usr/share/initramfs-tools/scripts/casper-bottom/*autologin
 
-    #virtualbox creates a user with id 999 which conflicts with casper's default
-    #  causing login to fail
+    # virtualbox creates a user with id 999 which conflicts with casper's default
+    #   causing login to fail
+    # 24.04: 999 taken by dnsmasq, 990 taken by systemd_oom. going with 994
     UID_999=$(getent passwd 999 | awk -F: '{ print $1}')
     if [ "${UID_999}" != "" ]; then
-        if [ "$(getent passwd 990)" == "" ]; then
-            log_msg "   avoiding conflict with ${UID_999}.  Using uid 990..."
-            sed -i -e 's@user-uid 999@user-uid 990@' \
+        if [ "$(getent passwd 994)" == "" ]; then
+            log_msg "   avoiding conflict with ${UID_999}.  Using uid 994..."
+            sed -i -e 's@user-uid 999@user-uid 994@' \
                 /usr/share/initramfs-tools/scripts/casper-bottom/*adduser
         else
             echo && echo
             log_msg "*  ERROR: problem finding a free userid. "
-            log_msg "*     Conflict with ${UID_999}"
+            log_msg "*     Conflict with ${UID_999} and $(getent passwd 994 | awk -F: '{ print $1}')"
             echo && echo
         fi
     fi
@@ -846,7 +848,9 @@ FOO
     #example: not available in 12.04, so download separately
     apt-get download -q libefivar0
     apt-get download -q libefivar1
+    apt-get download -q libefivar1t64
     apt-get download -q mokutil
+    apt-get download -q sbsigntool
 
     mkdir -p $WORKDIR/ISOTMP/dists
     cd $WORKDIR/ISOTMP/

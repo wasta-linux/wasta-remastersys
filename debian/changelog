@@ -1,3 +1,10 @@
+wasta-remastersys (4.7.2) noble; urgency=medium
+
+  * change backup uid from 990 to 994 (for noble, 999 taken by
+    dnsmasq and 990 taken by systemd_oom)
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Thu, 13 Jun 2024 10:44:55 -0500
+
 wasta-remastersys (4.7.1) noble; urgency=medium
 
   * bump version to try and get launchpad to accept changes
