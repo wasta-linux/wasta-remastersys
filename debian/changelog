@@ -1,3 +1,12 @@
+wasta-remastersys (4.7.3) noble; urgency=medium
+
+  * re-sync EFI/ and boot/ folders from Linux Mint 22.2 to
+    correct EFI compatibility.
+    - After sync, need to ensure boot/grub/grub.cfg adjustments are
+    re-applied from grub.cfg-wasta
+
+ -- Rik Shaw <rik.shaw@mailbox.org>  Mon, 10 Nov 2025 15:16:19 -0600
+
 wasta-remastersys (4.7.2) noble; urgency=medium
 
   * change backup uid from 990 to 994 (for noble, 999 taken by
