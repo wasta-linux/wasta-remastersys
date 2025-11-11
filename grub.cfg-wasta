@@ -1,0 +1,30 @@
+loadfont unicode
+
+set menu_color_normal=white/black
+set menu_color_highlight=black/light-gray
+
+menuentry "Start __LIVECDLABEL__" {
+	set gfxpayload=keep
+	linux	/casper/vmlinuz  file=/cdrom/preseed/custom.seed boot=casper iso-scan/filename=${iso_path} quiet splash --
+	initrd	/casper/initrd.gz
+}
+menuentry "Start __LIVECDLABEL__ (compatibility mode)" {
+	linux	/casper/vmlinuz  file=/cdrom/preseed/custom.seed boot=casper iso-scan/filename=${iso_path} noapic noacpi nosplash irqpoll nomodeset --
+	initrd	/casper/initrd.gz
+}
+grub_platform
+if [ "$grub_platform" = "efi" ]; then
+menuentry 'Boot from next volume' {
+	exit 1
+}
+menuentry 'UEFI Firmware Settings' {
+	fwsetup
+}
+menuentry 'Memory test' {
+	linux	/boot/memtest.efi
+}
+else
+menuentry 'Test memory' {
+	linux16 /boot/memtest.bin
+}
+fi
